@@ -375,10 +375,52 @@ namespace SmartLauncher.UI.Services
                     });
             }
 
+            if (Uri.TryCreate(
+                    launchValue,
+                    UriKind.Absolute,
+                    out Uri? protocolUri)
+                && IsSupportedApplicationProtocol(
+                    protocolUri.Scheme))
+            {
+                Process? protocolProcess =
+                    Process.Start(
+                        new ProcessStartInfo
+                        {
+                            FileName = launchValue,
+                            UseShellExecute = true
+                        });
+                protocolProcess?.Dispose();
+                return null;
+            }
+
             return StartExistingPath(
                 launchValue,
                 requireFile: true);
         }
+
+        private static bool IsSupportedApplicationProtocol(
+            string scheme) =>
+            scheme.Equals(
+                "steam",
+                StringComparison.OrdinalIgnoreCase)
+            || scheme.Equals(
+                "com.epicgames.launcher",
+                StringComparison.OrdinalIgnoreCase)
+            || scheme.Equals(
+                "goggalaxy",
+                StringComparison.OrdinalIgnoreCase)
+            || scheme.Equals(
+                "uplay",
+                StringComparison.OrdinalIgnoreCase)
+            || scheme.Equals(
+                "origin2",
+                StringComparison.OrdinalIgnoreCase)
+            || scheme.Equals(
+                "link2ea",
+                StringComparison.OrdinalIgnoreCase)
+            || scheme.Equals(
+                "battlenet",
+                StringComparison.OrdinalIgnoreCase);
 
         private static Process? StartExistingPath(
             string path,

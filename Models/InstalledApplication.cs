@@ -8,7 +8,8 @@ namespace SmartLauncher.UI.Models
         Executable,
         Shortcut,
         PackagedApp,
-        WebApplication
+        WebApplication,
+        Protocol
     }
 
     public class InstalledApplication
@@ -39,7 +40,9 @@ namespace SmartLauncher.UI.Models
 
         [JsonIgnore]
         public bool IsFound =>
-            LaunchKind == ApplicationLaunchKind.PackagedApp
+            LaunchKind
+                is ApplicationLaunchKind.PackagedApp
+                    or ApplicationLaunchKind.Protocol
                 ? !string.IsNullOrWhiteSpace(EffectiveLaunchValue)
                 : LaunchKind
                     == ApplicationLaunchKind.Executable
@@ -85,6 +88,10 @@ namespace SmartLauncher.UI.Models
                     "StartApps" => "Приложение Windows",
                     "ChromePwa" => "Приложение Chrome",
                     "EdgePwa" => "Приложение Edge",
+                    "SteamGame" => "Игра Steam",
+                    "EpicGame" => "Игра Epic Games",
+                    "GogGame" => "Игра GOG",
+                    "GameShortcut" => "Игровой ярлык",
                     "User" => "Добавлено пользователем",
                     "Cached" => "Сохранённый путь",
                     _ => "Найдено"

@@ -35,6 +35,8 @@ namespace SmartLauncher.UI
         private readonly LauncherDataService _dataService;
         private readonly IconExtractionService _iconService;
         private readonly LauncherService _launcherService;
+        private readonly UpdateBackupService
+            _updateBackupService;
         private readonly UpdateService _updateService;
         private readonly MainViewModel _viewModel;
         private readonly DispatcherTimer _statusTimer;
@@ -47,6 +49,10 @@ namespace SmartLauncher.UI
         private string? _editingTargetId;
         private readonly List<ProjectFileSet>
             _pendingProjectFileSets = new();
+        private InstalledApplication?
+            _selectedTargetApplication;
+        private bool _applicationPickerReady;
+        private bool _updatingApplicationPicker;
         private bool _updatingProjectFileSets;
         private bool _updateCheckRunning;
         private readonly List<ModeIconOption> _modeIconOptions = new();
@@ -60,11 +66,14 @@ namespace SmartLauncher.UI
             InitializeComponent();
             _viewModel = new MainViewModel();
             DataContext = _viewModel;
+            _applicationPickerReady = true;
 
             _catalogService = new AppCatalogService();
             _dataService = new LauncherDataService();
             _iconService = new IconExtractionService();
             _launcherService = new LauncherService();
+            _updateBackupService =
+                new UpdateBackupService();
             _updateService = new UpdateService();
 
             _appCatalog = _catalogService.LoadOrScan();
@@ -799,16 +808,125 @@ namespace SmartLauncher.UI
                     0);
         }
 
-        private void TargetApplicationCombo_SelectionChanged(
+        private void TargetApplicationSearchBox_TextChanged(
             object sender,
-            SelectionChangedEventArgs e)
+            TextChangedEventArgs e)
         {
-            if (TargetApplicationCombo.SelectedItem
-                    is InstalledApplication application
-                && string.IsNullOrWhiteSpace(
+            if (!_applicationPickerReady
+                || _updatingApplicationPicker)
+            {
+                return;
+            }
+
+            _selectedTargetApplication = null;
+            _viewModel.ApplicationSearchText =
+                TargetApplicationSearchBox.Text;
+            RefreshApplicationResultsPopup();
+        }
+
+        private void TargetApplicationSearchBox_GotKeyboardFocus(
+            object sender,
+            KeyboardFocusChangedEventArgs e) =>
+            RefreshApplicationResultsPopup();
+
+        private void TargetApplicationSearchBox_PreviewKeyDown(
+            object sender,
+            System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                TargetApplicationResultsPopup.IsOpen =
+                    false;
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Down)
+            {
+                if (_viewModel.ApplicationOptions.Count > 0)
+                {
+                    TargetApplicationResultsPopup.IsOpen =
+                        true;
+                    TargetApplicationResultsList.SelectedIndex =
+                        Math.Max(
+                            0,
+                            TargetApplicationResultsList
+                                .SelectedIndex);
+                    TargetApplicationResultsList.Focus();
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            if (e.Key == Key.Enter
+                && _viewModel.ApplicationOptions.Count > 0)
+            {
+                InstalledApplication application =
+                    TargetApplicationResultsList.SelectedItem
+                        as InstalledApplication
+                    ?? _viewModel.ApplicationOptions[0];
+                SelectTargetApplication(application);
+                e.Handled = true;
+            }
+        }
+
+        private void TargetApplicationResultsList_PreviewMouseLeftButtonUp(
+            object sender,
+            MouseButtonEventArgs e)
+        {
+            if (TargetApplicationResultsList.SelectedItem
+                is InstalledApplication application)
+            {
+                SelectTargetApplication(application);
+            }
+        }
+
+        private void SelectTargetApplication(
+            InstalledApplication application)
+        {
+            _selectedTargetApplication = application;
+            _updatingApplicationPicker = true;
+            try
+            {
+                TargetApplicationSearchBox.Text =
+                    application.Name;
+                TargetApplicationSearchBox.CaretIndex =
+                    TargetApplicationSearchBox.Text.Length;
+                _viewModel.ApplicationSearchText =
+                    application.Name;
+            }
+            finally
+            {
+                _updatingApplicationPicker = false;
+            }
+
+            TargetApplicationResultsPopup.IsOpen = false;
+            if (string.IsNullOrWhiteSpace(
                     TargetNameBox.Text))
             {
                 TargetNameBox.Text = application.Name;
+            }
+        }
+
+        private void RefreshApplicationResultsPopup()
+        {
+            bool hasQuery =
+                !string.IsNullOrWhiteSpace(
+                    TargetApplicationSearchBox.Text);
+
+            TargetApplicationResultsPopup.IsOpen =
+                TargetApplicationPicker.Visibility
+                    == Visibility.Visible
+                && TargetApplicationSearchBox
+                    .IsKeyboardFocusWithin
+                && hasQuery
+                && _viewModel.ApplicationOptions.Count > 0;
+
+            if (TargetApplicationResultsPopup.IsOpen)
+            {
+                TargetApplicationResultsList.SelectedIndex =
+                    0;
             }
         }
 
@@ -829,8 +947,7 @@ namespace SmartLauncher.UI
 
             InstalledApplication? selectedApplication =
                 type == LaunchTargetType.Application
-                    ? TargetApplicationCombo.SelectedItem
-                        as InstalledApplication
+                    ? _selectedTargetApplication
                     : null;
 
             string value =
@@ -997,19 +1114,22 @@ namespace SmartLauncher.UI
             TargetValueBox.Text = target.Value;
             if (target.Type == LaunchTargetType.Application)
             {
-                _viewModel.ApplicationSearchText =
-                    string.Empty;
-                TargetApplicationCombo.SelectedItem =
+                InstalledApplication? application =
                     _appCatalog.Applications.FirstOrDefault(
-                        application =>
+                        candidate =>
                             (!string.IsNullOrWhiteSpace(
                                 target.ApplicationId)
-                             && application.Id
+                             && candidate.Id
                                  == target.ApplicationId)
                             || string.Equals(
-                                application.EffectiveLaunchValue,
+                                candidate.EffectiveLaunchValue,
                                 target.Value,
                                 StringComparison.OrdinalIgnoreCase));
+
+                if (application != null)
+                {
+                    SelectTargetApplication(application);
+                }
             }
 
             _pendingProjectFileSets.Clear();
@@ -1502,9 +1622,13 @@ namespace SmartLauncher.UI
 
             TargetNameBox.Clear();
             TargetValueBox.Clear();
+            _selectedTargetApplication = null;
+            _updatingApplicationPicker = true;
+            TargetApplicationSearchBox.Clear();
             _viewModel.ApplicationSearchText =
                 string.Empty;
-            TargetApplicationCombo.SelectedItem = null;
+            _updatingApplicationPicker = false;
+            TargetApplicationResultsPopup.IsOpen = false;
             TargetTypeCombo.SelectedIndex = 0;
             OpenProjectFolderCheck.IsChecked = false;
             AddTargetButton.Content =
@@ -1535,14 +1659,15 @@ namespace SmartLauncher.UI
             bool isApplication =
                 type == LaunchTargetType.Application;
 
-            TargetApplicationCombo.Visibility =
+            TargetApplicationPicker.Visibility =
                 isApplication
                     ? Visibility.Visible
                     : Visibility.Collapsed;
-            TargetApplicationSearchPanel.Visibility =
-                isApplication
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
+            if (!isApplication)
+            {
+                TargetApplicationResultsPopup.IsOpen =
+                    false;
+            }
             TargetValueBox.Visibility =
                 isApplication
                     ? Visibility.Collapsed
@@ -1554,8 +1679,7 @@ namespace SmartLauncher.UI
                     : Visibility.Collapsed;
 
             bool canBrowse =
-                type is LaunchTargetType.Application
-                    or LaunchTargetType.File
+                type is LaunchTargetType.File
                     or LaunchTargetType.Folder
                     or LaunchTargetType.Project;
 
@@ -1565,9 +1689,6 @@ namespace SmartLauncher.UI
                     : Visibility.Collapsed;
 
             BrowseTargetButton.Content =
-                type == LaunchTargetType.Application
-                    ? "Каталог"
-                    :
                 type is LaunchTargetType.Folder
                     or LaunchTargetType.Project
                     ? "Папка"
@@ -1595,7 +1716,7 @@ namespace SmartLauncher.UI
             TargetHelpText.Text = type switch
             {
                 LaunchTargetType.Application =>
-                    "Выберите найденное приложение. Кнопка «Каталог» позволяет добавить своё.",
+                    "Начните вводить название и выберите приложение из найденных совпадений.",
                 LaunchTargetType.Website =>
                     "Введите полный адрес. Например: https://calendar.google.com.",
                 LaunchTargetType.File =>
@@ -1797,14 +1918,13 @@ namespace SmartLauncher.UI
         private void RefreshApplicationSelectors()
         {
             string selectedId =
-                (TargetApplicationCombo.SelectedItem
-                    as InstalledApplication)?.Id
+                _selectedTargetApplication?.Id
                 ?? string.Empty;
 
             _viewModel.SetApplications(
                 _appCatalog.Applications);
-            TargetApplicationCombo.SelectedItem =
-                _viewModel.ApplicationOptions
+            _selectedTargetApplication =
+                _appCatalog.Applications
                     .FirstOrDefault(application =>
                         application.Id == selectedId);
         }
@@ -2067,13 +2187,10 @@ namespace SmartLauncher.UI
                 _settings.WindowTransparency;
             AutomaticUpdatesCheck.IsChecked =
                 _settings.CheckUpdatesAutomatically;
-            UpdateManifestUrlBox.Text =
-                _settings.UpdateManifestUrl;
+            _settings.UpdateManifestUrl =
+                AppSettings.DefaultUpdateManifestUrl;
             UpdateStatusText.Text =
-                string.IsNullOrWhiteSpace(
-                    _settings.UpdateManifestUrl)
-                    ? "Укажите адрес после публикации установщика."
-                    : "Готово к проверке.";
+                "Готово к проверке обновлений.";
             DataPathText.Text =
                 "Режимы: "
                 + _dataService.DataFilePath
@@ -2105,7 +2222,7 @@ namespace SmartLauncher.UI
             _settings.CheckUpdatesAutomatically =
                 AutomaticUpdatesCheck.IsChecked == true;
             _settings.UpdateManifestUrl =
-                UpdateManifestUrlBox.Text.Trim();
+                AppSettings.DefaultUpdateManifestUrl;
             _settings.IsSidebarCollapsed =
                 SidebarColumn.Width.Value < 100;
 
@@ -2187,8 +2304,6 @@ namespace SmartLauncher.UI
             object sender,
             RoutedEventArgs e)
         {
-            _settings.UpdateManifestUrl =
-                UpdateManifestUrlBox.Text.Trim();
             await CheckForUpdatesAsync(
                 showUpToDateMessage: true);
         }
@@ -2202,20 +2317,9 @@ namespace SmartLauncher.UI
             }
 
             string manifestUrl =
-                UpdateManifestUrlBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(manifestUrl))
-            {
-                if (showUpToDateMessage)
-                {
-                    MessageBox.Show(
-                        "Сначала укажите HTTPS-адрес манифеста обновления.",
-                        "Обновления",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-
-                return;
-            }
+                AppSettings.DefaultUpdateManifestUrl;
+            _settings.UpdateManifestUrl =
+                manifestUrl;
 
             _updateCheckRunning = true;
             UpdateStatusText.Text =
@@ -2287,6 +2391,19 @@ namespace SmartLauncher.UI
                         .DownloadInstallerAsync(
                             result.Manifest,
                             progress);
+
+                UpdateStatusText.Text =
+                    "Создание резервной копии данных…";
+                string backupPath =
+                    await Task.Run(() =>
+                        _updateBackupService
+                            .CreateBeforeUpdateBackup(
+                                currentVersion,
+                                result.Manifest.Version));
+                AppLogService.Info(
+                    "Перед обновлением создана "
+                    + "резервная копия: "
+                    + backupPath);
 
                 UpdateStatusText.Text =
                     "Запуск установщика…";

@@ -316,7 +316,8 @@ namespace SmartLauncher.UI.Services
                 {
                     FileName = installerPath,
                     Arguments =
-                        "/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS",
+                        "/SILENT /CLOSEAPPLICATIONS "
+                        + "/RESTARTAPPLICATIONS /SLUPDATE=1",
                     UseShellExecute = true
                 });
         }

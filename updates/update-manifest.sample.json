@@ -1,7 +1,7 @@
 {
-  "version": "1.0.1",
-  "installerUrl": "https://github.com/Horizongit228/SmartLauncher/releases/download/v1.0.1/SmartLauncher-Setup-1.0.1.exe",
+  "version": "1.0.2",
+  "installerUrl": "https://github.com/Horizongit228/SmartLauncher/releases/download/v1.0.2/SmartLauncher-Setup-1.0.2.exe",
   "sha256": "REPLACE_WITH_64_CHARACTER_SHA256_OF_INSTALLER",
-  "releaseNotes": "Smart Launcher 1.0.1 — Первое обновление.",
+  "releaseNotes": "Smart Launcher 1.0.2 — Умный поиск и игры.",
   "publishedAtUtc": "2026-07-26T00:00:00Z"
 }

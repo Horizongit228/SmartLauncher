@@ -10,7 +10,7 @@ namespace SmartLauncher.UI.Services
 {
     public class AppCatalogService
     {
-        private const int CurrentSchemaVersion = 9;
+        private const int CurrentSchemaVersion = 10;
 
         private readonly ApplicationScanner _scanner;
 
@@ -114,7 +114,8 @@ namespace SmartLauncher.UI.Services
                 catalog.Applications.Any(
                     application =>
                         application.LaunchKind
-                        != ApplicationLaunchKind.PackagedApp
+                        is not ApplicationLaunchKind.PackagedApp
+                            and not ApplicationLaunchKind.Protocol
                         && !string.IsNullOrWhiteSpace(
                             application.EffectiveLaunchValue)
                         && !File.Exists(

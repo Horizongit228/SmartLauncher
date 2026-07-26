@@ -7,7 +7,7 @@ $projectFile = Join-Path $projectRoot 'SmartLauncher.UI.csproj'
 $scriptFile = Join-Path $PSScriptRoot 'SmartLauncher.iss'
 $compilerOutput = Join-Path $env:LOCALAPPDATA 'SmartLauncher\InstallerBuild'
 $distributionOutput = Join-Path $projectRoot 'dist\installer'
-$setupFileName = 'SmartLauncher-Setup-1.0.1.exe'
+$setupFileName = 'SmartLauncher-Setup-1.0.2.exe'
 
 dotnet publish $projectFile -p:PublishProfile=installed-win-x64
 if ($LASTEXITCODE -ne 0) {

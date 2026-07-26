@@ -1,5 +1,5 @@
 #define MyAppName "Smart Launcher"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "Smart Launcher"
 #define MyAppExeName "SmartLauncher.exe"
 
@@ -8,7 +8,7 @@ AppId={{C67327C7-0471-4E31-BBBC-F3900AC92A39}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-AppComments=Первое обновление
+AppComments=Умный поиск и игры
 DefaultDirName={localappdata}\Programs\Smart Launcher
 DefaultGroupName=Smart Launcher
 DisableProgramGroupPage=yes
@@ -45,4 +45,19 @@ Name: "{autodesktop}\Smart Launcher"; Filename: "{app}\{#MyAppExeName}"; IconFil
 Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "SmartLauncher"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: startup
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Запустить Smart Launcher"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Запустить Smart Launcher"; Flags: nowait postinstall skipifsilent; Check: IsRegularInstall
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait; Check: IsSmartLauncherUpdate
+
+[Code]
+function IsSmartLauncherUpdate: Boolean;
+begin
+  Result :=
+    CompareText(
+      ExpandConstant('{param:SLUPDATE|0}'),
+      '1') = 0;
+end;
+
+function IsRegularInstall: Boolean;
+begin
+  Result := not IsSmartLauncherUpdate;
+end;

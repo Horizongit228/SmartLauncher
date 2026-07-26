@@ -29,6 +29,8 @@ namespace SmartLauncher.UI.Services
                 ScanStartMenuShortcuts());
             applications.AddRange(
                 ScanPackagedApplications());
+            applications.AddRange(
+                new GameLibraryScanner().Scan());
 
             return applications
                 .Where(application =>

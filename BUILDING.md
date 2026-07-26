@@ -1,4 +1,4 @@
-# Сборка Smart Launcher 1.0
+# Сборка Smart Launcher 1.0.1
 
 ## Требования
 
@@ -42,7 +42,7 @@ dotnet publish SmartLauncher.UI.csproj -p:PublishProfile=installed-win-x64
 .\installer\build-installer.ps1
 ```
 
-Результат: `dist\installer\SmartLauncher-Setup-1.0.0.exe`.
+Результат: `dist\installer\SmartLauncher-Setup-1.0.1.exe`.
 
 ## Portable-версия
 
@@ -59,8 +59,8 @@ single-file EXE; он остаётся дополнительным вариан
 
 ```powershell
 .\installer\New-UpdateManifest.ps1 `
-  -InstallerUrl 'https://downloads.example.com/SmartLauncher-Setup-1.0.0.exe' `
-  -ReleaseNotes 'Smart Launcher 1.0 — Самая первая версия'
+  -InstallerUrl 'https://downloads.example.com/SmartLauncher-Setup-1.0.1.exe' `
+  -ReleaseNotes 'Smart Launcher 1.0.1 — Первое обновление'
 ```
 
 Скрипт вычислит SHA-256 и создаст

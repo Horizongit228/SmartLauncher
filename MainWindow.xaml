@@ -674,7 +674,7 @@
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        Margin="0,7,0,0"/>
                             <TextBlock x:Name="SidebarVersionText"
-                                       Text="1.0 · Самая первая версия"
+                                       Text="1.0.1 · Первое обновление"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        FontSize="10"
                                        HorizontalAlignment="Center"
@@ -1255,17 +1255,62 @@
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid x:Name="TargetApplicationSearchPanel"
+                                                          Grid.ColumnSpan="2"
+                                                          Visibility="Collapsed"
+                                                          Margin="0,0,0,7">
+                                                        <TextBox x:Name="TargetApplicationSearchBox"
+                                                                 Style="{StaticResource InputTextBox}"
+                                                                 Text="{Binding ApplicationSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                                                 AutomationProperties.Name="Поиск приложения"
+                                                                 ToolTip="Поиск по названию, категории или пути"
+                                                                 Margin="0"/>
+                                                        <StackPanel Margin="12,0"
+                                                                    VerticalAlignment="Center"
+                                                                    Orientation="Horizontal"
+                                                                    IsHitTestVisible="False">
+                                                            <TextBlock Text="&#xE721;"
+                                                                       FontFamily="Segoe MDL2 Assets"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       FontSize="13"
+                                                                       VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Найти приложение…"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       Margin="8,0,0,0"
+                                                                       VerticalAlignment="Center"/>
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility"
+                                                                            Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Text, ElementName=TargetApplicationSearchBox}"
+                                                                                     Value="">
+                                                                            <Setter Property="Visibility"
+                                                                                    Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                        </StackPanel>
+                                                    </Grid>
                                                     <TextBox x:Name="TargetValueBox"
+                                                             Grid.Row="1"
                                                              Style="{StaticResource InputTextBox}"
                                                              AutomationProperties.Name="Путь, адрес или команда"
                                                              ToolTip="Путь, URL, Steam ID или команда"
                                                              Margin="0"/>
                                                     <ComboBox x:Name="TargetApplicationCombo"
+                                                              Grid.Row="1"
                                                               Visibility="Collapsed"
                                                               Style="{StaticResource InputComboBox}"
                                                               ItemsSource="{Binding ApplicationOptions}"
                                                               SelectionChanged="TargetApplicationCombo_SelectionChanged"
-                                                              AutomationProperties.Name="Приложение из каталога">
+                                                              AutomationProperties.Name="Приложение из каталога"
+                                                              Margin="0">
                                                         <ComboBox.ItemTemplate>
                                                             <DataTemplate>
                                                                 <Grid Margin="2">
@@ -1297,6 +1342,7 @@
                                                         </ComboBox.ItemTemplate>
                                                     </ComboBox>
                                                     <Button x:Name="BrowseTargetButton"
+                                                            Grid.Row="1"
                                                             Grid.Column="1"
                                                             MinWidth="94"
                                                             Content="Обзор"

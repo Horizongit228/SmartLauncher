@@ -1,5 +1,5 @@
 #define MyAppName "Smart Launcher"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "Smart Launcher"
 #define MyAppExeName "SmartLauncher.exe"
 
@@ -8,7 +8,7 @@ AppId={{C67327C7-0471-4E31-BBBC-F3900AC92A39}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-AppComments=Самая первая версия
+AppComments=Первое обновление
 DefaultDirName={localappdata}\Programs\Smart Launcher
 DefaultGroupName=Smart Launcher
 DisableProgramGroupPage=yes

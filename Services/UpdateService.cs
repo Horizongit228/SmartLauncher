@@ -1,7 +1,9 @@
 using SmartLauncher.UI.Models;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -10,10 +12,13 @@ namespace SmartLauncher.UI.Services
     public sealed class UpdateService
     {
         private static readonly HttpClient HttpClient =
-            new()
-            {
-                Timeout = TimeSpan.FromSeconds(20)
-            };
+            CreateHttpClient();
+
+        private static readonly TimeSpan ManifestRequestTimeout =
+            TimeSpan.FromSeconds(45);
+
+        private static readonly TimeSpan InstallerRequestTimeout =
+            TimeSpan.FromSeconds(90);
 
         private static readonly JsonSerializerOptions JsonOptions =
             new()
@@ -32,10 +37,12 @@ namespace SmartLauncher.UI.Services
                     "адрес манифеста");
 
             using HttpResponseMessage response =
-                await HttpClient.GetAsync(
+                await GetWithRetryAsync(
                     manifestUri,
+                    HttpCompletionOption.ResponseContentRead,
+                    ManifestRequestTimeout,
                     cancellationToken);
-            response.EnsureSuccessStatusCode();
+            EnsureSuccessfulResponse(response);
 
             await using Stream content =
                 await response.Content.ReadAsStreamAsync(
@@ -100,11 +107,12 @@ namespace SmartLauncher.UI.Services
                 downloadPath + ".download";
 
             using HttpResponseMessage response =
-                await HttpClient.GetAsync(
+                await GetWithRetryAsync(
                     installerUri,
                     HttpCompletionOption.ResponseHeadersRead,
+                    InstallerRequestTimeout,
                     cancellationToken);
-            response.EnsureSuccessStatusCode();
+            EnsureSuccessfulResponse(response);
 
             long? totalBytes =
                 response.Content.Headers.ContentLength;
@@ -168,6 +176,129 @@ namespace SmartLauncher.UI.Services
                 downloadPath,
                 overwrite: true);
             return downloadPath;
+        }
+
+        private static HttpClient CreateHttpClient()
+        {
+            var client =
+                new HttpClient
+                {
+                    Timeout =
+                        Timeout.InfiniteTimeSpan
+                };
+
+            client.DefaultRequestHeaders.UserAgent.Add(
+                new ProductInfoHeaderValue(
+                    "SmartLauncher-Updater",
+                    "1.0"));
+            return client;
+        }
+
+        private static async Task<HttpResponseMessage>
+            GetWithRetryAsync(
+                Uri uri,
+                HttpCompletionOption completionOption,
+                TimeSpan requestTimeout,
+                CancellationToken cancellationToken)
+        {
+            const int attemptCount = 2;
+            Exception? lastException = null;
+
+            for (int attempt = 1;
+                 attempt <= attemptCount;
+                 attempt++)
+            {
+                using var timeoutSource =
+                    CancellationTokenSource
+                        .CreateLinkedTokenSource(
+                            cancellationToken);
+                timeoutSource.CancelAfter(requestTimeout);
+
+                try
+                {
+                    HttpResponseMessage response =
+                        await HttpClient.GetAsync(
+                            uri,
+                            completionOption,
+                            timeoutSource.Token);
+
+                    if (response.IsSuccessStatusCode
+                        || !IsTransientStatusCode(
+                            response.StatusCode)
+                        || attempt == attemptCount)
+                    {
+                        return response;
+                    }
+
+                    response.Dispose();
+                }
+                catch (OperationCanceledException exception)
+                    when (!cancellationToken
+                        .IsCancellationRequested)
+                {
+                    lastException = exception;
+                    if (attempt == attemptCount)
+                    {
+                        throw new TimeoutException(
+                            "Сервер обновлений отвечает слишком долго. "
+                            + "Проверьте подключение к интернету "
+                            + "и повторите попытку чуть позже.",
+                            exception);
+                    }
+                }
+                catch (HttpRequestException exception)
+                {
+                    lastException = exception;
+                    if (attempt == attemptCount)
+                    {
+                        throw new HttpRequestException(
+                            "Не удалось подключиться к серверу обновлений. "
+                            + "Проверьте интернет-соединение "
+                            + "и повторите попытку.",
+                            exception);
+                    }
+                }
+
+                await Task.Delay(
+                    TimeSpan.FromMilliseconds(
+                        700 * attempt),
+                    cancellationToken);
+            }
+
+            throw new HttpRequestException(
+                "Не удалось подключиться к серверу обновлений.",
+                lastException);
+        }
+
+        private static bool IsTransientStatusCode(
+            HttpStatusCode statusCode) =>
+            statusCode == HttpStatusCode.RequestTimeout
+            || (int)statusCode == 429
+            || (int)statusCode >= 500;
+
+        private static void EnsureSuccessfulResponse(
+            HttpResponseMessage response)
+        {
+            if (response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            int statusCode =
+                (int)response.StatusCode;
+            string message =
+                response.StatusCode
+                    == HttpStatusCode.NotFound
+                    ? "Файл обновления не найден на сервере "
+                      + $"(HTTP {statusCode})."
+                    : "Сервер обновлений временно недоступен "
+                      + $"(HTTP {statusCode}). "
+                      + "Повторите попытку чуть позже.";
+
+            throw new HttpRequestException(
+                message,
+                null,
+                response.StatusCode);
         }
 
         public static void StartInstaller(

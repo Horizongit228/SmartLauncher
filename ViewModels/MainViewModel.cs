@@ -9,6 +9,8 @@ namespace SmartLauncher.UI.ViewModels
     {
         private readonly List<InstalledApplication>
             _allApplications = new();
+        private string _applicationSearchText =
+            string.Empty;
         private string _catalogSearchText = string.Empty;
         private string _selectedCatalogCategory =
             "Разработка";
@@ -45,6 +47,20 @@ namespace SmartLauncher.UI.ViewModels
 
         public ModeEditorViewModel ModeEditor { get; } =
             new();
+
+        public string ApplicationSearchText
+        {
+            get => _applicationSearchText;
+            set
+            {
+                if (SetProperty(
+                        ref _applicationSearchText,
+                        value))
+                {
+                    ApplyApplicationFilter();
+                }
+            }
+        }
 
         public string CatalogSearchText
         {
@@ -90,20 +106,48 @@ namespace SmartLauncher.UI.ViewModels
             _allApplications.Clear();
             _allApplications.AddRange(applications);
 
+            ApplyApplicationFilter();
+            ApplyCatalogFilter();
+        }
+
+        private void ApplyApplicationFilter()
+        {
+            string query =
+                ApplicationSearchText.Trim();
+
+            IEnumerable<InstalledApplication> filtered =
+                _allApplications.Where(application =>
+                    application.IsFound);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                filtered = filtered.Where(application =>
+                    application.Name.Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase)
+                    || application.Category.Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase)
+                    || application.PathText.Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase));
+            }
+
             ApplicationOptions.Clear();
             foreach (InstalledApplication application
-                     in _allApplications
-                         .Where(application =>
-                             application.IsFound)
-                         .OrderBy(application =>
+                     in filtered
+                         .OrderByDescending(application =>
+                             application.Name.StartsWith(
+                                 query,
+                                 StringComparison
+                                     .CurrentCultureIgnoreCase))
+                         .ThenBy(application =>
                              application.Category)
                          .ThenBy(application =>
                              application.Name))
             {
                 ApplicationOptions.Add(application);
             }
-
-            ApplyCatalogFilter();
         }
 
         private void ApplyCatalogFilter()

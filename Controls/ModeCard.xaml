@@ -115,7 +115,8 @@
             </Setter>
         </Style>
 
-        <Style TargetType="ContextMenu">
+        <Style x:Key="CardContextMenu"
+               TargetType="ContextMenu">
             <Setter Property="Background"
                     Value="#1D212B"/>
             <Setter Property="Foreground"
@@ -126,15 +127,82 @@
                     Value="1"/>
             <Setter Property="Padding"
                     Value="5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ScrollViewer CanContentScroll="True"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <Style TargetType="MenuItem">
+        <Style x:Key="CardMenuItem"
+               TargetType="MenuItem">
             <Setter Property="Padding"
-                    Value="12,8"/>
+                    Value="14,9"/>
             <Setter Property="Margin"
                     Value="2"/>
             <Setter Property="Foreground"
                     Value="White"/>
+            <Setter Property="MinWidth"
+                    Value="190"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="MenuItemBorder"
+                                Background="Transparent"
+                                CornerRadius="7"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              RecognizesAccessKey="True"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted"
+                                     Value="True">
+                                <Setter TargetName="MenuItemBorder"
+                                        Property="Background"
+                                        Value="#2B416F"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="MenuItemBorder"
+                                        Property="Background"
+                                        Value="#36548D"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter Property="Opacity"
+                                        Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardMenuSeparator"
+               TargetType="Separator">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Height="1"
+                                Margin="12,5"
+                                Background="#3A4252"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -208,13 +276,16 @@
                             Content="⋯"
                             Click="MoreButton_Click">
                         <Button.ContextMenu>
-                            <ContextMenu>
+                            <ContextMenu Style="{StaticResource CardContextMenu}">
                                 <MenuItem Header="Редактировать"
+                                          Style="{StaticResource CardMenuItem}"
                                           Click="EditMenuItem_Click"/>
                                 <MenuItem Header="Дублировать"
+                                          Style="{StaticResource CardMenuItem}"
                                           Click="DuplicateMenuItem_Click"/>
-                                <Separator/>
+                                <Separator Style="{StaticResource CardMenuSeparator}"/>
                                 <MenuItem Header="Удалить"
+                                          Style="{StaticResource CardMenuItem}"
                                           Click="DeleteMenuItem_Click"/>
                             </ContextMenu>
                         </Button.ContextMenu>

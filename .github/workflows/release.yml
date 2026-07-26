@@ -53,7 +53,7 @@ jobs:
           ./installer/New-UpdateManifest.ps1 `
             -InstallerUrl $assetUrl `
             -Version $version `
-            -ReleaseNotes "Smart Launcher 1.0 — Самая первая версия"
+            -ReleaseNotes "Smart Launcher 1.0.1 — Первое обновление: поиск приложений, исправленное меню и более надёжная проверка обновлений."
           Copy-Item `
             -LiteralPath "dist/portable-win-x64/SmartLauncher.exe" `
             -Destination "dist/installer/SmartLauncher-portable-$version.exe"
@@ -68,5 +68,5 @@ jobs:
             "dist/installer/SmartLauncher-Setup-$version.exe" `
             "dist/installer/SmartLauncher-portable-$version.exe" `
             "dist/installer/update-manifest.json" `
-            --title "Smart Launcher 1.0 — Самая первая версия" `
+            --title "Smart Launcher 1.0.1 — Первое обновление" `
             --notes-file CHANGELOG.md

@@ -997,6 +997,8 @@ namespace SmartLauncher.UI
             TargetValueBox.Text = target.Value;
             if (target.Type == LaunchTargetType.Application)
             {
+                _viewModel.ApplicationSearchText =
+                    string.Empty;
                 TargetApplicationCombo.SelectedItem =
                     _appCatalog.Applications.FirstOrDefault(
                         application =>
@@ -1500,6 +1502,8 @@ namespace SmartLauncher.UI
 
             TargetNameBox.Clear();
             TargetValueBox.Clear();
+            _viewModel.ApplicationSearchText =
+                string.Empty;
             TargetApplicationCombo.SelectedItem = null;
             TargetTypeCombo.SelectedIndex = 0;
             OpenProjectFolderCheck.IsChecked = false;
@@ -1532,6 +1536,10 @@ namespace SmartLauncher.UI
                 type == LaunchTargetType.Application;
 
             TargetApplicationCombo.Visibility =
+                isApplication
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            TargetApplicationSearchPanel.Visibility =
                 isApplication
                     ? Visibility.Visible
                     : Visibility.Collapsed;

@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using SmartLauncher.UI.Models;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,17 +14,10 @@ namespace SmartLauncher.UI.Dialogs
         public AddApplicationDialog()
         {
             InitializeComponent();
-            CategoryBox.ItemsSource = new[]
-            {
-                "Разработка",
-                "Игры",
-                "Браузеры",
-                "Общение",
-                "Мультимедиа",
-                "Работа",
-                "Другое"
-            };
-            CategoryBox.SelectedItem = "Другое";
+            CategoryBox.ItemsSource =
+                ApplicationCategories.All;
+            CategoryBox.SelectedItem =
+                ApplicationCategories.Other;
         }
 
         public string ApplicationName => NameBox.Text.Trim();
@@ -31,7 +25,8 @@ namespace SmartLauncher.UI.Dialogs
         public string ExecutablePath => PathBox.Text.Trim();
 
         public string Category =>
-            CategoryBox.SelectedItem as string ?? "Другое";
+            CategoryBox.SelectedItem as string
+            ?? ApplicationCategories.Other;
 
         private void BrowseButton_Click(
             object sender,

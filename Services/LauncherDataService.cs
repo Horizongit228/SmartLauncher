@@ -430,7 +430,9 @@ namespace SmartLauncher.UI.Services
                     : mode.Id;
 
                 mode.Name ??= string.Empty;
-                mode.Icon ??= string.Empty;
+                mode.Icon =
+                    AssetIconService.NormalizeModeIcon(
+                        mode.Icon);
                 mode.Description ??= string.Empty;
                 mode.AccentColor =
                     string.IsNullOrWhiteSpace(mode.AccentColor)

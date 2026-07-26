@@ -659,22 +659,23 @@
                         CornerRadius="0,0,0,20">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="130"/>
+                            <RowDefinition Height="165"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="70"/>
                         </Grid.RowDefinitions>
 
                         <StackPanel HorizontalAlignment="Center"
                                     VerticalAlignment="Center">
-                            <Image Source="/Assets/Icons/SL.png"
-                                   Width="65"
-                                   Height="65"/>
+                            <Image x:Name="SidebarLogo"
+                                   Source="/Assets/Icons/SL.png"
+                                   Width="96"
+                                   Height="96"/>
                             <TextBlock x:Name="SidebarTitle"
                                        Text="Smart Launcher"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        Margin="0,7,0,0"/>
                             <TextBlock x:Name="SidebarVersionText"
-                                       Text="1.0.2 · Умный поиск и игры"
+                                       Text="1.0.3 · Расширенный поиск"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        FontSize="10"
                                        HorizontalAlignment="Center"
@@ -873,9 +874,9 @@
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        VerticalAlignment="Center"
                                        Text="Готово"/>
-                            <Button Content="+  Новый режим"
+                            <Button Content="+  Добавить сценарий"
                                     Style="{StaticResource ActionButton}"
-                                    HorizontalAlignment="Right"
+                                    HorizontalAlignment="Left"
                                     Click="NewModeButton_Click"/>
                         </Grid>
                     </Grid>
@@ -945,10 +946,6 @@
                                              TextChanged="ModePreviewField_Changed"/>
 
                                     <Grid Margin="0,8,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="110"/>
-                                        </Grid.ColumnDefinitions>
                                         <StackPanel>
                                             <TextBlock Text="Иконка"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
@@ -985,11 +982,6 @@
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
                                         </StackPanel>
-                                        <Button Grid.Column="1"
-                                                Content="Выбрать"
-                                                Style="{StaticResource SecondaryButton}"
-                                                Margin="8,24,0,5"
-                                                Click="ChooseModeIconButton_Click"/>
                                     </Grid>
 
                                     <TextBlock Text="Цвет карточки (#RRGGBB)"
@@ -1499,17 +1491,17 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Right"
-                                                Margin="0,14,0,0">
+                                    <Grid Margin="0,14,0,0">
+                                        <Button Content="Сохранить режим"
+                                                HorizontalAlignment="Left"
+                                                Style="{StaticResource ActionButton}"
+                                                Click="SaveModeButton_Click"/>
                                         <Button Content="Удалить режим"
+                                                HorizontalAlignment="Right"
                                                 Background="#A93646"
                                                 Style="{StaticResource ActionButton}"
                                                 Click="DeleteEditedModeButton_Click"/>
-                                        <Button Content="Сохранить режим"
-                                                Style="{StaticResource ActionButton}"
-                                                Click="SaveModeButton_Click"/>
-                                    </StackPanel>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </ScrollViewer>
@@ -1799,7 +1791,7 @@
 
                             <Button Content="Сохранить настройки"
                                     Style="{StaticResource ActionButton}"
-                                    HorizontalAlignment="Right"
+                                    HorizontalAlignment="Left"
                                     Margin="0,14,0,20"
                                     Click="SaveSettingsButton_Click"/>
                         </StackPanel>

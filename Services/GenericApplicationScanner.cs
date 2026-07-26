@@ -18,17 +18,26 @@ namespace SmartLauncher.UI.Services
         private const string UninstallRegistryPath =
             @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
 
+        private const string AppPathsRegistryPath =
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
+
         public List<InstalledApplication> Scan()
         {
             var applications =
                 new List<InstalledApplication>();
 
             applications.AddRange(
+                ScanAppPathsRegistry());
+            applications.AddRange(
                 ScanUninstallRegistry());
             applications.AddRange(
-                ScanStartMenuShortcuts());
+                ScanApplicationShortcuts());
             applications.AddRange(
                 ScanPackagedApplications());
+            applications.AddRange(
+                ScanRunningApplications());
+            applications.AddRange(
+                ScanApplicationDirectories());
             applications.AddRange(
                 new GameLibraryScanner().Scan());
 
@@ -50,9 +59,104 @@ namespace SmartLauncher.UI.Services
                                 "\\Startup\\",
                                 StringComparison.OrdinalIgnoreCase))
                         .First())
+                .GroupBy(
+                    application =>
+                        NormalizeProductIdentity(
+                            application.Name),
+                    StringComparer
+                        .CurrentCultureIgnoreCase)
+                .Select(group =>
+                    group
+                        .OrderBy(
+                            application =>
+                                GetSourcePriority(
+                                    application.Source))
+                        .ThenBy(application =>
+                            application
+                                .EffectiveLaunchValue
+                                .Length)
+                        .First())
                 .OrderBy(application =>
                     application.Name)
                 .ToList();
+        }
+
+        private static IEnumerable<InstalledApplication>
+            ScanAppPathsRegistry()
+        {
+            foreach (RegistryHive hive
+                     in new[]
+                     {
+                         RegistryHive.CurrentUser,
+                         RegistryHive.LocalMachine
+                     })
+            {
+                foreach (RegistryView view
+                         in new[]
+                         {
+                             RegistryView.Registry64,
+                             RegistryView.Registry32
+                         })
+                {
+                    RegistryKey? appPathsKey = null;
+                    try
+                    {
+                        using RegistryKey baseKey =
+                            RegistryKey.OpenBaseKey(
+                                hive,
+                                view);
+                        appPathsKey =
+                            baseKey.OpenSubKey(
+                                AppPathsRegistryPath);
+                        if (appPathsKey == null)
+                        {
+                            continue;
+                        }
+
+                        foreach (string subKeyName
+                                 in appPathsKey
+                                     .GetSubKeyNames())
+                        {
+                            using RegistryKey? applicationKey =
+                                appPathsKey.OpenSubKey(
+                                    subKeyName);
+                            string executablePath =
+                                NormalizeExecutablePath(
+                                    applicationKey
+                                        ?.GetValue(null)
+                                    as string
+                                    ?? string.Empty);
+
+                            if (!IsExecutableFile(
+                                    executablePath)
+                                || IsLikelyMaintenanceExecutable(
+                                    executablePath)
+                                || IsSystemExecutablePath(
+                                    executablePath)
+                                || IsPackagedExecutablePath(
+                                    executablePath)
+                                || executablePath.Contains(
+                                    "\\Common Files\\",
+                                    StringComparison
+                                        .OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
+                            yield return
+                                CreateApplicationFromExecutable(
+                                    executablePath,
+                                    Path.GetFileNameWithoutExtension(
+                                        subKeyName),
+                                    "AppPaths");
+                        }
+                    }
+                    finally
+                    {
+                        appPathsKey?.Dispose();
+                    }
+                }
+            }
         }
 
         private static IEnumerable<InstalledApplication>
@@ -108,7 +212,9 @@ namespace SmartLauncher.UI.Services
                         if (string.IsNullOrWhiteSpace(name)
                             || applicationKey.GetValue(
                                 "SystemComponent") is int systemComponent
-                            && systemComponent == 1)
+                            && systemComponent == 1
+                            || IsNonApplicationRegistration(
+                                name))
                         {
                             continue;
                         }
@@ -125,7 +231,11 @@ namespace SmartLauncher.UI.Services
                         if (!IsExecutableFile(
                                 executablePath)
                             || IsLikelyMaintenanceExecutable(
-                                executablePath))
+                                executablePath)
+                            || executablePath.Contains(
+                                "\\Package Cache\\",
+                                StringComparison
+                                    .OrdinalIgnoreCase))
                         {
                             executablePath =
                                 FindExecutableInInstallLocation(
@@ -155,21 +265,34 @@ namespace SmartLauncher.UI.Services
         }
 
         private static IEnumerable<InstalledApplication>
-            ScanStartMenuShortcuts()
+            ScanApplicationShortcuts()
         {
-            string[] roots =
+            (string Path, string Source)[] roots =
             {
-                Path.Combine(
+                (
+                    Path.Combine(
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.StartMenu),
+                        "Programs"),
+                    "StartMenu"),
+                (
+                    Path.Combine(
+                        Environment.GetFolderPath(
+                            Environment.SpecialFolder.CommonStartMenu),
+                        "Programs"),
+                    "StartMenu"),
+                (
                     Environment.GetFolderPath(
-                        Environment.SpecialFolder.StartMenu),
-                    "Programs"),
-                Path.Combine(
+                        Environment.SpecialFolder.DesktopDirectory),
+                    "Desktop"),
+                (
                     Environment.GetFolderPath(
-                        Environment.SpecialFolder.CommonStartMenu),
-                    "Programs")
+                        Environment.SpecialFolder.CommonDesktopDirectory),
+                    "Desktop")
             };
 
-            foreach (string root in roots)
+            foreach ((string root, string source)
+                     in roots.Distinct())
             {
                 if (!Directory.Exists(root))
                 {
@@ -278,7 +401,7 @@ namespace SmartLauncher.UI.Services
                                 ? "ChromePwa"
                                 : isEdgePwa
                                     ? "EdgePwa"
-                                    : "StartMenu");
+                                    : source);
 
                     if (isChromePwa || isEdgePwa)
                     {
@@ -293,9 +416,6 @@ namespace SmartLauncher.UI.Services
                                 + "|"
                                 + webAppId);
                     }
-
-                    application.IconPath =
-                        details.IconPath;
 
                     yield return application;
                 }
@@ -410,140 +530,206 @@ namespace SmartLauncher.UI.Services
             return applications;
         }
 
+        private static IEnumerable<InstalledApplication>
+            ScanRunningApplications()
+        {
+            var applications =
+                new List<InstalledApplication>();
+
+            foreach (Process process
+                     in Process.GetProcesses())
+            {
+                try
+                {
+                    if (process.MainWindowHandle
+                            == IntPtr.Zero
+                        || process.Id
+                            == Environment.ProcessId)
+                    {
+                        continue;
+                    }
+
+                    string executablePath =
+                        process.MainModule?.FileName
+                        ?? string.Empty;
+                    if (!IsExecutableFile(
+                            executablePath)
+                        || IsLikelyMaintenanceExecutable(
+                            executablePath)
+                        || IsSystemExecutablePath(
+                            executablePath)
+                        || IsPackagedExecutablePath(
+                            executablePath))
+                    {
+                        continue;
+                    }
+
+                    applications.Add(
+                        CreateApplicationFromExecutable(
+                            executablePath,
+                            process.ProcessName,
+                            "RunningProcess"));
+                }
+                catch
+                {
+                    // Защищённый системный процесс пропускается.
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+
+            return applications;
+        }
+
+        private static IEnumerable<InstalledApplication>
+            ScanApplicationDirectories()
+        {
+            string[] roots =
+            {
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .ProgramFiles),
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .ProgramFilesX86),
+                Path.Combine(
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder
+                            .LocalApplicationData),
+                    "Programs"),
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .LocalApplicationData),
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .ApplicationData)
+            };
+
+            var applications =
+                new List<InstalledApplication>();
+
+            foreach (string root
+                     in roots
+                         .Where(Directory.Exists)
+                         .Distinct(
+                             StringComparer
+                                 .OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var options =
+                        new EnumerationOptions
+                        {
+                            RecurseSubdirectories =
+                                true,
+                            MaxRecursionDepth =
+                                IsUserDataDirectory(
+                                    root)
+                                    ? 2
+                                    : 3,
+                            IgnoreInaccessible = true,
+                            AttributesToSkip =
+                                FileAttributes
+                                    .ReparsePoint
+                        };
+
+                    foreach (string executablePath
+                             in Directory
+                                 .EnumerateFiles(
+                                     root,
+                                     "*.exe",
+                                     options)
+                                 .Take(6000))
+                    {
+                        if (!IsLikelyUserApplication(
+                                executablePath))
+                        {
+                            continue;
+                        }
+
+                        applications.Add(
+                            CreateApplicationFromExecutable(
+                                executablePath,
+                                string.Empty,
+                                "FolderScan"));
+
+                        if (applications.Count
+                            >= 800)
+                        {
+                            return
+                                ReduceDirectoryScanResults(
+                                    applications);
+                        }
+                    }
+                }
+                catch (Exception exception)
+                {
+                    AppLogService.Warning(
+                        "Не удалось полностью просканировать "
+                        + $"{root}: {exception.Message}");
+                }
+            }
+
+            return ReduceDirectoryScanResults(
+                applications);
+        }
+
+        private static InstalledApplication
+            CreateApplicationFromExecutable(
+                string executablePath,
+                string fallbackName,
+                string source)
+        {
+            string name =
+                GetApplicationDisplayName(
+                    executablePath,
+                    fallbackName);
+
+            return CreateApplication(
+                name,
+                executablePath,
+                ApplicationLaunchKind.Executable,
+                source);
+        }
+
         private static InstalledApplication CreateApplication(
             string name,
             string launchValue,
             ApplicationLaunchKind launchKind,
             string source)
         {
-            var application =
-                new InstalledApplication
-            {
-                Id =
-                    "app-"
-                    + CreateStableId(
-                        launchValue),
-                Name = name.Trim(),
-                ExecutablePath =
+            string category =
+                ApplicationCategories.Infer(
+                    name,
                     launchKind
-                    is ApplicationLaunchKind.Executable
-                        ? launchValue
-                        : string.Empty,
-                LaunchValue = launchValue,
-                LaunchKind = launchKind,
-                Source = source,
-                Category =
-                    InferCategory(
-                        name,
+                        == ApplicationLaunchKind.WebApplication
+                        ? name
+                        : launchValue);
+
+            return
+                new InstalledApplication
+                {
+                    Id =
+                        "app-"
+                        + CreateStableId(
+                            launchValue),
+                    Name = name.Trim(),
+                    ExecutablePath =
                         launchKind
-                            == ApplicationLaunchKind.WebApplication
-                            ? name
-                            : launchValue)
-            };
-
-            if (launchKind
-                == ApplicationLaunchKind.PackagedApp)
-            {
-                application.IconPath =
-                    "/Assets/Icons/Apps.png";
-            }
-
-            return application;
-        }
-
-        private static string InferCategory(
-            string name,
-            string path)
-        {
-            string value =
-                (name + " " + path).ToLowerInvariant();
-
-            if (ContainsAny(
-                    value,
-                    "visual studio",
-                    "code",
-                    "rider",
-                    "github",
-                    "git",
-                    "docker",
-                    "postman",
-                    "terminal",
-                    "powershell"))
-            {
-                return "Разработка";
-            }
-
-            if (ContainsAny(
-                    value,
-                    "steam",
-                    "epic",
-                    "game",
-                    "xbox",
-                    "battle.net",
-                    "gog"))
-            {
-                return "Игры";
-            }
-
-            if (ContainsAny(
-                    value,
-                    "telegram",
-                    "discord",
-                    "slack",
-                    "teams",
-                    "zoom",
-                    "skype"))
-            {
-                return "Общение";
-            }
-
-            if (ContainsAny(
-                    value,
-                    "youtube",
-                    "spotify",
-                    "music",
-                    "video",
-                    "vlc",
-                    "media"))
-            {
-                return "Мультимедиа";
-            }
-
-            if (ContainsAny(
-                    value,
-                    "chrome",
-                    "edge",
-                    "browser",
-                    "firefox",
-                    "opera",
-                    "yandex"))
-            {
-                return "Браузеры";
-            }
-
-            if (ContainsAny(
-                    value,
-                    "word",
-                    "excel",
-                    "powerpoint",
-                    "office",
-                    "notion",
-                    "obsidian"))
-            {
-                return "Работа";
-            }
-
-            return "Другое";
-        }
-
-        private static bool ContainsAny(
-            string value,
-            params string[] terms)
-        {
-            return terms.Any(term =>
-                value.Contains(
-                    term,
-                    StringComparison.OrdinalIgnoreCase));
+                        is ApplicationLaunchKind.Executable
+                            ? launchValue
+                            : string.Empty,
+                    LaunchValue = launchValue,
+                    LaunchKind = launchKind,
+                    Source = source,
+                    Category = category,
+                    IconPath =
+                        AssetIconService
+                            .GetApplicationIcon(
+                                category)
+                };
         }
 
         private static string FindExecutableInInstallLocation(
@@ -589,6 +775,349 @@ namespace SmartLauncher.UI.Services
             {
                 return string.Empty;
             }
+        }
+
+        private static string GetApplicationDisplayName(
+            string executablePath,
+            string fallbackName)
+        {
+            try
+            {
+                FileVersionInfo versionInfo =
+                    FileVersionInfo.GetVersionInfo(
+                        executablePath);
+
+                string name =
+                    versionInfo.ProductName
+                    ?? versionInfo.FileDescription
+                    ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(name)
+                    && !IsGenericProductName(name))
+                {
+                    return name.Trim();
+                }
+            }
+            catch
+            {
+                // Метаданные EXE могут отсутствовать.
+            }
+
+            return string.IsNullOrWhiteSpace(
+                    fallbackName)
+                ? Path.GetFileNameWithoutExtension(
+                    executablePath)
+                : fallbackName.Trim();
+        }
+
+        private static bool IsLikelyUserApplication(
+            string executablePath)
+        {
+            if (!IsExecutableFile(executablePath)
+                || IsLikelyMaintenanceExecutable(
+                    executablePath))
+            {
+                return false;
+            }
+
+            string normalizedPath =
+                executablePath
+                    .Replace('/', '\\')
+                    .ToLowerInvariant();
+            string fileName =
+                Path.GetFileNameWithoutExtension(
+                        executablePath)
+                    .ToLowerInvariant();
+
+            string[] excludedPathParts =
+            {
+                "\\appdata\\local\\temp\\",
+                "\\appdata\\local\\packages\\",
+                "\\cache\\",
+                "\\caches\\",
+                "\\common files\\",
+                "\\crashpad\\",
+                "\\debug\\",
+                "\\dotnet\\",
+                "\\edgecore\\",
+                "\\edgeupdate\\",
+                "\\edgewebview\\",
+                "\\git\\bin\\",
+                "\\git\\cmd\\",
+                "\\git\\mingw64\\",
+                "\\git\\usr\\",
+                "\\installer\\",
+                "\\locales\\",
+                "\\node_modules\\",
+                "\\package cache\\",
+                "\\pending\\",
+                "\\plugins\\",
+                "\\redist\\",
+                "\\reference assemblies\\",
+                "\\resources\\",
+                "\\runtimes\\",
+                "\\sdk\\",
+                "\\updates\\",
+                "\\ruxim\\",
+                "\\windows defender\\",
+                "\\windows kits\\",
+                "\\windows photo viewer\\",
+                "\\windowsapps\\"
+            };
+
+            if (excludedPathParts.Any(
+                    normalizedPath.Contains))
+            {
+                return false;
+            }
+
+            string[] excludedNames =
+            {
+                "bootstrap",
+                "broker",
+                "ccxprocess",
+                "cefsharp",
+                "clidmgr",
+                "crash",
+                "debug",
+                "diagnostic",
+                "experience_",
+                "handler",
+                "helper",
+                "notification",
+                "renderer",
+                "rollback",
+                "report",
+                "service",
+                "telemetry",
+                "updater",
+                "vc_redist"
+            };
+
+            if (excludedNames.Any(
+                    fileName.Contains))
+            {
+                return false;
+            }
+
+            try
+            {
+                FileVersionInfo versionInfo =
+                    FileVersionInfo.GetVersionInfo(
+                        executablePath);
+                string productName =
+                    versionInfo.ProductName
+                    ?? string.Empty;
+                string description =
+                    versionInfo.FileDescription
+                    ?? string.Empty;
+                string metadata =
+                    (productName
+                     + " "
+                     + description)
+                    .ToLowerInvariant();
+
+                if (new[]
+                    {
+                        " crash ",
+                        " driver",
+                        " helper",
+                        " module",
+                        " rollback",
+                        " service",
+                        " telemetry",
+                        " updater",
+                        " update "
+                    }.Any(metadata.Contains))
+                {
+                    return false;
+                }
+
+                return (!string.IsNullOrWhiteSpace(
+                            productName)
+                        && !IsGenericProductName(
+                            productName))
+                       || (!string.IsNullOrWhiteSpace(
+                               description)
+                           && !IsGenericProductName(
+                               description));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static IEnumerable<InstalledApplication>
+            ReduceDirectoryScanResults(
+                IEnumerable<InstalledApplication>
+                    applications)
+        {
+            return applications
+                .GroupBy(
+                    application =>
+                        NormalizeProductIdentity(
+                            application.Name),
+                    StringComparer
+                        .CurrentCultureIgnoreCase)
+                .Select(group =>
+                    group
+                        .OrderByDescending(
+                            GetExecutableCandidateScore)
+                        .ThenBy(application =>
+                            application
+                                .EffectiveLaunchValue
+                                .Length)
+                        .First())
+                .ToList();
+        }
+
+        private static int GetExecutableCandidateScore(
+            InstalledApplication application)
+        {
+            string fileName =
+                NormalizeProductIdentity(
+                    Path.GetFileNameWithoutExtension(
+                        application
+                            .EffectiveLaunchValue));
+            string productName =
+                NormalizeProductIdentity(
+                    application.Name);
+            int score =
+                productName == fileName
+                    ? 100
+                    : productName.Contains(
+                        fileName,
+                        StringComparison
+                            .OrdinalIgnoreCase)
+                      || fileName.Contains(
+                          productName,
+                          StringComparison
+                              .OrdinalIgnoreCase)
+                        ? 55
+                        : 0;
+
+            int depth =
+                application.EffectiveLaunchValue
+                    .Count(character =>
+                        character
+                        == Path.DirectorySeparatorChar);
+
+            return score
+                   - depth;
+        }
+
+        private static string NormalizeProductIdentity(
+            string value) =>
+            string.Concat(
+                value.Where(
+                    char.IsLetterOrDigit))
+            .ToLowerInvariant();
+
+        private static bool IsSystemExecutablePath(
+            string executablePath)
+        {
+            string windowsDirectory =
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .Windows)
+                .TrimEnd(
+                    Path.DirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+
+            return executablePath.StartsWith(
+                windowsDirectory,
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPackagedExecutablePath(
+            string executablePath) =>
+            executablePath.Contains(
+                "\\WindowsApps\\",
+                StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsNonApplicationRegistration(
+            string displayName)
+        {
+            string value =
+                displayName.ToLowerInvariant();
+
+            string[] excludedTerms =
+            {
+                " redistributable",
+                " runtime",
+                " framework",
+                " language pack",
+                " webview2",
+                " update",
+                " driver",
+                " sdk",
+                " targeting pack",
+                " hostfxr",
+                " apphost pack",
+                " windows desktop runtime",
+                "пакет обновления",
+                "драйвер"
+            };
+
+            return excludedTerms.Any(
+                value.Contains);
+        }
+
+        private static int GetSourcePriority(
+            string source) =>
+            source switch
+            {
+                "SteamGame"
+                    or "EpicGame"
+                    or "GogGame"
+                    or "GameShortcut"
+                    or "ChromePwa"
+                    or "EdgePwa" => 0,
+                "StartApps" => 1,
+                "StartMenu"
+                    or "Desktop" => 2,
+                "AppPaths" => 3,
+                "Registry" => 4,
+                "RunningProcess" => 5,
+                "FolderScan" => 6,
+                _ => 7
+            };
+
+        private static bool IsGenericProductName(
+            string value)
+        {
+            string normalized =
+                value.Trim().ToLowerInvariant();
+
+            return normalized
+                is "microsoft® windows® operating system"
+                    or "microsoft windows operating system"
+                    or "java platform se binary"
+                    or ".net"
+                    or ".net runtime"
+                    or "setup"
+                    or "installer";
+        }
+
+        private static bool IsUserDataDirectory(
+            string root)
+        {
+            string localAppData =
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .LocalApplicationData);
+            string roamingAppData =
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder
+                        .ApplicationData);
+
+            return root.StartsWith(
+                       localAppData,
+                       StringComparison.OrdinalIgnoreCase)
+                   || root.StartsWith(
+                       roamingAppData,
+                       StringComparison.OrdinalIgnoreCase);
         }
 
         private static string NormalizeExecutablePath(
@@ -681,7 +1210,19 @@ namespace SmartLauncher.UI.Services
                        StringComparison.CurrentCulture)
                    || normalized.StartsWith(
                        "удалить ",
-                       StringComparison.CurrentCulture);
+                       StringComparison.CurrentCulture)
+                   || normalized.StartsWith(
+                       "удаление ",
+                       StringComparison.CurrentCulture)
+                   || normalized.StartsWith(
+                       "check for update",
+                       StringComparison.Ordinal)
+                   || normalized.StartsWith(
+                       "проверить обнов",
+                       StringComparison.CurrentCulture)
+                   || normalized.StartsWith(
+                       "about ",
+                       StringComparison.Ordinal);
         }
 
         private static string ReadArgumentValue(

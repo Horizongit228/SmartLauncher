@@ -18,16 +18,7 @@ namespace SmartLauncher.UI.ViewModels
         public MainViewModel()
         {
             foreach (string category
-                     in new[]
-                     {
-                         "Разработка",
-                         "Игры",
-                         "Браузеры",
-                         "Общение",
-                         "Мультимедиа",
-                         "Работа",
-                         "Другое"
-                     })
+                     in ApplicationCategories.All)
             {
                 CatalogCategories.Add(category);
             }

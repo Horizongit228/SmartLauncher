@@ -3,9 +3,9 @@ param(
     [Parameter(Mandatory)]
     [string]$InstallerUrl,
 
-    [string]$Version = '1.0.2',
+    [string]$Version = '1.0.3',
 
-    [string]$ReleaseNotes = 'Smart Launcher 1.0.2 - Smart search and games.'
+    [string]$ReleaseNotes = 'Smart Launcher 1.0.3 - Extended application search.'
 )
 
 $ErrorActionPreference = 'Stop'

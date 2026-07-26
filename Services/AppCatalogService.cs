@@ -10,7 +10,7 @@ namespace SmartLauncher.UI.Services
 {
     public class AppCatalogService
     {
-        private const int CurrentSchemaVersion = 10;
+        private const int CurrentSchemaVersion = 11;
 
         private readonly ApplicationScanner _scanner;
 
@@ -411,15 +411,6 @@ namespace SmartLauncher.UI.Services
                     previousApplication.IsUserAdded
                     && previousApplication.IsFound;
 
-                if (scannedApplication != null
-                    && File.Exists(
-                        previousApplication.IconPath))
-                {
-                    scannedApplication.IconPath =
-                        previousApplication.IconPath;
-                }
-
-
                 if (validManualPath)
                 {
                     if (scannedApplication == null)
@@ -540,13 +531,15 @@ namespace SmartLauncher.UI.Services
                 application.LaunchValue ??=
                     string.Empty;
                 application.Source ??= string.Empty;
-                application.IconPath ??=
-                    string.Empty;
                 application.Category =
                     string.IsNullOrWhiteSpace(
                         application.Category)
-                        ? "Другое"
+                        ? ApplicationCategories.Other
                         : application.Category;
+                application.IconPath =
+                    AssetIconService
+                        .GetApplicationIcon(
+                            application.Category);
 
                 if (string.IsNullOrWhiteSpace(
                         application.LaunchValue))

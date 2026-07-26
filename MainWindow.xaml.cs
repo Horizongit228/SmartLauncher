@@ -33,7 +33,7 @@ namespace SmartLauncher.UI
     {
         private readonly AppCatalogService _catalogService;
         private readonly LauncherDataService _dataService;
-        private readonly IconExtractionService _iconService;
+        private readonly AssetIconService _assetIconService;
         private readonly LauncherService _launcherService;
         private readonly UpdateBackupService
             _updateBackupService;
@@ -70,14 +70,14 @@ namespace SmartLauncher.UI
 
             _catalogService = new AppCatalogService();
             _dataService = new LauncherDataService();
-            _iconService = new IconExtractionService();
+            _assetIconService = new AssetIconService();
             _launcherService = new LauncherService();
             _updateBackupService =
                 new UpdateBackupService();
             _updateService = new UpdateService();
 
             _appCatalog = _catalogService.LoadOrScan();
-            _iconService.PopulateIcons(_appCatalog);
+            _assetIconService.PopulateIcons(_appCatalog);
             _catalogService.Save(_appCatalog);
 
             _launcherData =
@@ -581,50 +581,6 @@ namespace SmartLauncher.UI
             }
         }
 
-        private void ChooseModeIconButton_Click(
-            object sender,
-            RoutedEventArgs e)
-        {
-            var dialog =
-                new OpenFileDialog
-                {
-                    Title = "Выберите изображение или приложение",
-                    Filter =
-                        "Иконки и приложения|*.png;*.jpg;*.jpeg;*.ico;*.exe|"
-                        + "Все файлы|*.*"
-                };
-
-            if (dialog.ShowDialog(this) != true)
-            {
-                return;
-            }
-
-            if (string.Equals(
-                    Path.GetExtension(dialog.FileName),
-                    ".exe",
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                string extracted =
-                    _iconService.ExtractIcon(
-                        dialog.FileName,
-                        "mode-" + Guid.NewGuid().ToString("N"));
-
-                SelectModeIcon(
-                    string.IsNullOrWhiteSpace(extracted)
-                        ? dialog.FileName
-                        : extracted,
-                    "Пользовательская иконка");
-            }
-            else
-            {
-                SelectModeIcon(
-                    dialog.FileName,
-                    "Пользовательская иконка");
-            }
-
-            UpdateModePreview();
-        }
-
         private void RefreshModeIconOptions()
         {
             string selectedPath =
@@ -634,102 +590,34 @@ namespace SmartLauncher.UI
 
             _modeIconOptions.Clear();
             _modeIconOptions.AddRange(
-                new[]
-                {
-                    new ModeIconOption
-                    {
-                        Name = "Работа",
-                        Path = "/Assets/Icons/Work.png",
-                        SourceText = "Smart Launcher"
-                    },
-                    new ModeIconOption
-                    {
-                        Name = "Игры",
-                        Path = "/Assets/Icons/Gaming.png",
-                        SourceText = "Smart Launcher"
-                    },
-                    new ModeIconOption
-                    {
-                        Name = "Отдых",
-                        Path = "/Assets/Icons/Relax.png",
-                        SourceText = "Smart Launcher"
-                    },
-                    new ModeIconOption
-                    {
-                        Name = "Приложения",
-                        Path = "/Assets/Icons/Apps.png",
-                        SourceText = "Smart Launcher"
-                    },
-                    new ModeIconOption
-                    {
-                        Name = "Настройки",
-                        Path = "/Assets/Icons/Settings.png",
-                        SourceText = "Smart Launcher"
-                    }
-                });
-
-            foreach (InstalledApplication application
-                     in _appCatalog.Applications
-                         .Where(application =>
-                             application.IsFound
-                             && File.Exists(
-                                 application.IconPath))
-                         .OrderBy(application =>
-                             application.Name))
-            {
-                if (_modeIconOptions.Any(option =>
-                        string.Equals(
-                            option.Path,
-                            application.IconPath,
-                            StringComparison.OrdinalIgnoreCase)))
-                {
-                    continue;
-                }
-
-                _modeIconOptions.Add(
-                    new ModeIconOption
-                    {
-                        Name = application.Name,
-                        Path = application.IconPath,
-                        SourceText = "Из каталога приложений"
-                    });
-            }
+                _assetIconService
+                    .GetModeIconOptions());
 
             _viewModel.ModeEditor.SetIconOptions(
                 _modeIconOptions);
 
-            SelectModeIcon(selectedPath);
+            SelectModeIcon(
+                AssetIconService.NormalizeModeIcon(
+                    selectedPath));
         }
 
         private void SelectModeIcon(
-            string path,
-            string sourceText = "Текущий режим")
+            string path)
         {
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                ModeIconCombo.SelectedItem = null;
-                return;
-            }
-
+            string normalizedPath =
+                AssetIconService.NormalizeModeIcon(
+                    path);
             ModeIconOption? option =
                 _modeIconOptions.FirstOrDefault(item =>
                     string.Equals(
                         item.Path,
-                        path,
+                        normalizedPath,
                         StringComparison.OrdinalIgnoreCase));
 
             if (option == null)
             {
-                option =
-                    new ModeIconOption
-                    {
-                        Name = "Пользовательская",
-                        Path = path,
-                        SourceText = sourceText
-                    };
-                _modeIconOptions.Add(option);
-                _viewModel.ModeEditor.SetIconOptions(
-                    _modeIconOptions);
+                ModeIconCombo.SelectedItem = null;
+                return;
             }
 
             ModeIconCombo.SelectedItem = option;
@@ -1944,7 +1832,7 @@ namespace SmartLauncher.UI
                         _catalogService.Refresh(_appCatalog));
 
                 await Task.Run(() =>
-                    _iconService.PopulateIcons(refreshed));
+                    _assetIconService.PopulateIcons(refreshed));
 
                 _appCatalog = refreshed;
                 _catalogService.Save(_appCatalog);
@@ -2023,9 +1911,9 @@ namespace SmartLauncher.UI
                     dialog.FileName);
 
                 application.IconPath =
-                    _iconService.ExtractIcon(
-                        dialog.FileName,
-                        application.Id);
+                    AssetIconService
+                        .GetApplicationIcon(
+                            application.Category);
 
                 _catalogService.Save(_appCatalog);
                 RefreshCatalog();
@@ -2087,9 +1975,9 @@ namespace SmartLauncher.UI
                         dialog.Category);
 
                 application.IconPath =
-                    _iconService.ExtractIcon(
-                        application.ExecutablePath,
-                        application.Id);
+                    AssetIconService
+                        .GetApplicationIcon(
+                            application.Category);
 
                 _catalogService.Save(_appCatalog);
                 RefreshCatalog();
@@ -2595,6 +2483,8 @@ namespace SmartLauncher.UI
             bool animate)
         {
             double width = collapsed ? 82 : 230;
+            double logoSize =
+                collapsed ? 58 : 96;
 
             if (animate)
             {
@@ -2626,11 +2516,35 @@ namespace SmartLauncher.UI
                 SidebarColumn.BeginAnimation(
                     ColumnDefinition.WidthProperty,
                     animation);
+
+                var logoAnimation =
+                    new DoubleAnimation(
+                        SidebarLogo.ActualWidth > 0
+                            ? SidebarLogo.ActualWidth
+                            : SidebarLogo.Width,
+                        logoSize,
+                        TimeSpan.FromMilliseconds(260))
+                    {
+                        EasingFunction =
+                            new QuadraticEase
+                            {
+                                EasingMode =
+                                    EasingMode.EaseOut
+                            }
+                    };
+                SidebarLogo.BeginAnimation(
+                    WidthProperty,
+                    logoAnimation);
+                SidebarLogo.BeginAnimation(
+                    HeightProperty,
+                    logoAnimation);
             }
             else
             {
                 SidebarColumn.Width =
                     new GridLength(width);
+                SidebarLogo.Width = logoSize;
+                SidebarLogo.Height = logoSize;
             }
 
             ApplySidebarTextAnimation(

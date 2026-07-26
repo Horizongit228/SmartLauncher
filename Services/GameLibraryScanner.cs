@@ -160,11 +160,6 @@ namespace SmartLauncher.UI.Services
                         FindLikelyGameExecutable(
                             gameDirectory,
                             name);
-                    string iconPath =
-                        FindSteamIcon(
-                            steamRoots,
-                            appId);
-
                     yield return
                         new InstalledApplication
                         {
@@ -182,7 +177,8 @@ namespace SmartLauncher.UI.Services
                                     .Protocol,
                             Source = "SteamGame",
                             IconPath =
-                                iconPath,
+                                AssetIconService
+                                    .GamingIcon,
                             Category = "Игры"
                         };
                 }
@@ -681,19 +677,6 @@ namespace SmartLauncher.UI.Services
                         continue;
                     }
 
-                    string iconPath =
-                        ReadInternetShortcutValue(
-                            lines,
-                            "IconFile");
-                    string executablePath =
-                        File.Exists(iconPath)
-                        && string.Equals(
-                            Path.GetExtension(iconPath),
-                            ".exe",
-                            StringComparison.OrdinalIgnoreCase)
-                            ? iconPath
-                            : string.Empty;
-
                     yield return
                         new InstalledApplication
                         {
@@ -705,7 +688,7 @@ namespace SmartLauncher.UI.Services
                                 Path.GetFileNameWithoutExtension(
                                     shortcutPath),
                             ExecutablePath =
-                                executablePath,
+                                string.Empty,
                             LaunchValue =
                                 launchValue,
                             LaunchKind =
@@ -713,7 +696,8 @@ namespace SmartLauncher.UI.Services
                                     .Protocol,
                             Source = "GameShortcut",
                             IconPath =
-                                iconPath,
+                                AssetIconService
+                                    .GamingIcon,
                             Category = "Игры"
                         };
                 }

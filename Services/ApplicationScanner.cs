@@ -63,10 +63,32 @@ namespace SmartLauncher.UI.Services
                     StringComparer.OrdinalIgnoreCase)
                 .Select(group =>
                     group.First())
+                .GroupBy(
+                    application =>
+                        NormalizeApplicationName(
+                            application.Name),
+                    StringComparer
+                        .CurrentCultureIgnoreCase)
+                .Select(group =>
+                    group
+                        .OrderByDescending(
+                            application =>
+                                application.IsFound)
+                        .ThenBy(application =>
+                            application.Source
+                                == "NotFound")
+                        .First())
                 .OrderBy(application =>
                     application.Name)
                 .ToList();
         }
+
+        private static string NormalizeApplicationName(
+            string value) =>
+            string.Concat(
+                value.Where(
+                    char.IsLetterOrDigit))
+            .ToLowerInvariant();
 
 
         private InstalledApplication ScanApplication(
@@ -205,7 +227,8 @@ namespace SmartLauncher.UI.Services
                 ExecutablePath = string.Empty,
                 Source = "NotFound",
                 Category =
-                    GetKnownCategory(
+                    ApplicationCategories.Infer(
+                        definition.Name,
                         definition.Id)
             };
         }
@@ -226,22 +249,14 @@ namespace SmartLauncher.UI.Services
                     ApplicationLaunchKind.Executable,
                 Source = source,
                 Category =
-                    GetKnownCategory(
-                        definition.Id)
-            };
-        }
-
-        private static string GetKnownCategory(
-            string applicationId)
-        {
-            return applicationId switch
-            {
-                "vscode" => "Разработка",
-                "steam" => "Игры",
-                "yandex" => "Браузеры",
-                "discord" or "telegram" =>
-                    "Общение",
-                _ => "Другое"
+                    ApplicationCategories.Infer(
+                        definition.Name,
+                        executablePath),
+                IconPath =
+                    AssetIconService.GetApplicationIcon(
+                        ApplicationCategories.Infer(
+                            definition.Name,
+                            executablePath))
             };
         }
 

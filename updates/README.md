@@ -20,8 +20,8 @@ https://github.com/Horizongit228/SmartLauncher/releases/latest/download/update-m
 ## Создание релиза
 
 ```powershell
-git tag v1.0.2
-git push origin v1.0.2
+git tag v1.0.3
+git push origin v1.0.3
 ```
 
 GitHub Actions проверит совпадение тега с версией `.csproj`, соберёт оба

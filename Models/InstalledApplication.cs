@@ -82,6 +82,7 @@ namespace SmartLauncher.UI.Models
                     "Registry" => "Найдено в реестре",
                     "EnvironmentPath" => "Найдено в PATH",
                     "StartMenu" => "Найдено в меню Пуск",
+                    "Desktop" => "Найдено на рабочем столе",
                     "FolderScan" => "Найдено сканированием",
                     "RunningProcess" => "Найдено среди запущенных",
                     "Package" => "Приложение Microsoft Store",

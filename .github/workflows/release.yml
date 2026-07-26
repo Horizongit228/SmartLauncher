@@ -53,7 +53,7 @@ jobs:
           ./installer/New-UpdateManifest.ps1 `
             -InstallerUrl $assetUrl `
             -Version $version `
-            -ReleaseNotes "Smart Launcher 1.0.2 — Умный поиск и игры: единый поисковый выбор приложений, больше игровых библиотек, скрытый бэкап и автоматический запуск после обновления."
+            -ReleaseNotes "Smart Launcher 1.0.3 — Расширенный поиск: больше источников приложений, улучшенные категории, иконки из Assets и понятное расположение основных кнопок."
           Copy-Item `
             -LiteralPath "dist/portable-win-x64/SmartLauncher.exe" `
             -Destination "dist/installer/SmartLauncher-portable-$version.exe"
@@ -68,5 +68,5 @@ jobs:
             "dist/installer/SmartLauncher-Setup-$version.exe" `
             "dist/installer/SmartLauncher-portable-$version.exe" `
             "dist/installer/update-manifest.json" `
-            --title "Smart Launcher 1.0.2 — Умный поиск и игры" `
+            --title "Smart Launcher 1.0.3 — Расширенный поиск" `
             --notes-file CHANGELOG.md

@@ -5,7 +5,7 @@ param(
 
     [string]$Version = '1.0.0',
 
-    [string]$ReleaseNotes = 'Smart Launcher 1.0 — Самая первая версия.'
+    [string]$ReleaseNotes = 'Smart Launcher 1.0 - First release.'
 )
 
 $ErrorActionPreference = 'Stop'

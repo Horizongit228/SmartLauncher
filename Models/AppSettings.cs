@@ -10,6 +10,9 @@ namespace SmartLauncher.UI.Models
 
     public class AppSettings
     {
+        public const string DefaultUpdateManifestUrl =
+            "https://github.com/Horizongit228/SmartLauncher/releases/latest/download/update-manifest.json";
+
         public AppTheme Theme { get; set; } = AppTheme.Dark;
 
         public bool StartWithWindows { get; set; }
@@ -26,7 +29,8 @@ namespace SmartLauncher.UI.Models
 
         public bool CheckUpdatesAutomatically { get; set; } = true;
 
-        public string UpdateManifestUrl { get; set; } = string.Empty;
+        public string UpdateManifestUrl { get; set; } =
+            DefaultUpdateManifestUrl;
 
         public double WindowTransparency { get; set; } = 0.94;
     }

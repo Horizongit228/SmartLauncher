@@ -11,11 +11,11 @@
 Стабильный URL проверки:
 
 ```text
-https://github.com/OWNER/SmartLauncher/releases/latest/download/update-manifest.json
+https://github.com/Horizongit228/SmartLauncher/releases/latest/download/update-manifest.json
 ```
 
-После создания репозитория замените `OWNER` на GitHub login и сохраните URL
-в настройках Smart Launcher.
+Этот адрес задан по умолчанию и автоматически восстанавливается при
+миграции пустого значения из предыдущей сборки.
 
 ## Создание релиза
 

@@ -359,16 +359,17 @@ GitHub Release для каждого тега `vX.Y.Z` содержит:
 Стабильный URL проверки:
 
 ```text
-https://github.com/OWNER/SmartLauncher/releases/latest/download/update-manifest.json
+https://github.com/Horizongit228/SmartLauncher/releases/latest/download/update-manifest.json
 ```
 
-После появления репозитория `OWNER` заменяется на GitHub login.
+Этот URL уже задан в приложении по умолчанию. Пустое значение из настроек
+предыдущих сборок автоматически переносится на официальный адрес.
 
 Локальное создание манифеста:
 
 ```powershell
 .\installer\New-UpdateManifest.ps1 `
-  -InstallerUrl 'https://github.com/OWNER/SmartLauncher/releases/download/v1.0.0/SmartLauncher-Setup-1.0.0.exe' `
+  -InstallerUrl 'https://github.com/Horizongit228/SmartLauncher/releases/download/v1.0.0/SmartLauncher-Setup-1.0.0.exe' `
   -Version '1.0.0' `
   -ReleaseNotes 'Smart Launcher 1.0 - First release'
 ```
@@ -487,4 +488,3 @@ git push origin v1.0.0
 - UI Automation-тесты;
 - отдельный тестовый проект для хранения, миграций, обновлений и запуска;
 - дальнейший перенос навигационной координации окна в команды ViewModel.
-

@@ -97,8 +97,13 @@ namespace SmartLauncher.UI.Services
                         0.78,
                         1.0);
 
-                settings.UpdateManifestUrl ??=
-                    string.Empty;
+                if (string.IsNullOrWhiteSpace(
+                        settings.UpdateManifestUrl))
+                {
+                    settings.UpdateManifestUrl =
+                        AppSettings.DefaultUpdateManifestUrl;
+                    migrated = true;
+                }
 
                 if (recovered || migrated)
                 {

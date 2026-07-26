@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <SmartLauncherBuildRoot>$(LOCALAPPDATA)\SmartLauncher\Build\</SmartLauncherBuildRoot>
+    <BaseOutputPath>$(SmartLauncherBuildRoot)bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(SmartLauncherBuildRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(SmartLauncherBuildRoot)obj\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

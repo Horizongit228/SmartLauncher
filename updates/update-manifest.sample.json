@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "installerUrl": "https://github.com/OWNER/SmartLauncher/releases/download/v1.0.0/SmartLauncher-Setup-1.0.0.exe",
+  "sha256": "REPLACE_WITH_64_CHARACTER_SHA256_OF_INSTALLER",
+  "releaseNotes": "Smart Launcher 1.0 — Самая первая версия.",
+  "publishedAtUtc": "2026-07-26T00:00:00Z"
+}

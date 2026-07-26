@@ -1,0 +1,1751 @@
+<Window x:Class="SmartLauncher.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Smart Launcher"
+        Icon="/Assets/Icons/SL.ico"
+        Width="1180"
+        Height="760"
+        MinWidth="860"
+        MinHeight="620"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        TextOptions.TextFormattingMode="Display"
+        Opacity="0">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="WindowBrush"
+                         Color="#101010"/>
+        <SolidColorBrush x:Key="SidebarBrush"
+                         Color="#181818"/>
+        <SolidColorBrush x:Key="PanelBrush"
+                         Color="#171717"/>
+        <SolidColorBrush x:Key="InputBrush"
+                         Color="#202020"/>
+        <SolidColorBrush x:Key="BorderBrush"
+                         Color="#2B2B2B"/>
+        <SolidColorBrush x:Key="PrimaryTextBrush"
+                         Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SecondaryTextBrush"
+                         Color="#C8C8C8"/>
+        <SolidColorBrush x:Key="MutedTextBrush"
+                         Color="#8D8D8D"/>
+        <SolidColorBrush x:Key="AccentBrush"
+                         Color="#2F6DF4"/>
+        <SolidColorBrush x:Key="AccentHoverBrush"
+                         Color="#4A82FF"/>
+        <SolidColorBrush x:Key="DangerBrush"
+                         Color="#D94B5F"/>
+        <SolidColorBrush x:Key="SecondaryButtonBrush"
+                         Color="#252A35"/>
+        <SolidColorBrush x:Key="InputFocusBrush"
+                         Color="#242A38"/>
+        <LinearGradientBrush x:Key="AccentGradient"
+                             StartPoint="0,0"
+                             EndPoint="1,1">
+            <GradientStop Color="#3978FF"
+                          Offset="0"/>
+            <GradientStop Color="#665CFF"
+                          Offset="1"/>
+        </LinearGradientBrush>
+
+        <Style TargetType="ToolTip">
+            <Setter Property="Background"
+                    Value="#252936"/>
+            <Setter Property="Foreground"
+                    Value="White"/>
+            <Setter Property="BorderBrush"
+                    Value="#3B4254"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+            <Setter Property="Padding"
+                    Value="10,7"/>
+            <Setter Property="FontSize"
+                    Value="12"/>
+        </Style>
+
+        <Style x:Key="NavButton"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="52"/>
+            <Setter Property="Margin"
+                    Value="10,4"/>
+            <Setter Property="Padding"
+                    Value="16,0"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Background"
+                    Value="Transparent"/>
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Left"/>
+            <Setter Property="FontSize"
+                    Value="15"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="NavBorder"
+                                CornerRadius="13"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Border x:Name="ActiveIndicator"
+                                        Width="3"
+                                        Height="23"
+                                        Margin="-10,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        CornerRadius="2"
+                                        Background="#8DB2FF"
+                                        Visibility="Collapsed"/>
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="NavBorder"
+                                        Property="Background"
+                                        Value="#25304A"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                            </Trigger>
+                            <Trigger Property="Tag"
+                                     Value="True">
+                                <Setter TargetName="NavBorder"
+                                        Property="Background"
+                                        Value="#2B416F"/>
+                                <Setter TargetName="ActiveIndicator"
+                                        Property="Visibility"
+                                        Value="Visible"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                                <Setter Property="FontWeight"
+                                        Value="SemiBold"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="NavBorder"
+                                        Property="Opacity"
+                                        Value="0.72"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NavIconImage"
+               TargetType="Image">
+            <Setter Property="Width"
+                    Value="30"/>
+            <Setter Property="Height"
+                    Value="30"/>
+            <Setter Property="Stretch"
+                    Value="UniformToFill"/>
+            <Setter Property="RenderTransformOrigin"
+                    Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1.55"
+                                    ScaleY="1.55"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ActionButton"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="42"/>
+            <Setter Property="Padding"
+                    Value="16,0"/>
+            <Setter Property="Margin"
+                    Value="4"/>
+            <Setter Property="Background"
+                    Value="{StaticResource AccentGradient}"/>
+            <Setter Property="Foreground"
+                    Value="White"/>
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+            <Setter Property="FontWeight"
+                    Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ActionBorder"
+                                CornerRadius="12"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1"
+                                                ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ActionBorder"
+                                        Property="Opacity"
+                                        Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="ActionBorder"
+                                        Property="Opacity"
+                                        Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter TargetName="ActionBorder"
+                                        Property="Opacity"
+                                        Value="0.42"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton"
+               TargetType="Button"
+               BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background"
+                    Value="{DynamicResource SecondaryButtonBrush}"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="BorderBrush"
+                    Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+        </Style>
+
+        <Style x:Key="WindowButton"
+               TargetType="Button"
+               BasedOn="{StaticResource SecondaryButton}">
+            <Setter Property="Width"
+                    Value="42"/>
+            <Setter Property="Height"
+                    Value="32"/>
+            <Setter Property="Padding"
+                    Value="0"/>
+            <Setter Property="Margin"
+                    Value="2,0"/>
+            <Setter Property="Background"
+                    Value="Transparent"/>
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+            <Setter Property="FontFamily"
+                    Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+        </Style>
+
+        <Style x:Key="CloseWindowButton"
+               TargetType="Button"
+               BasedOn="{StaticResource WindowButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="CloseBorder"
+                                CornerRadius="9"
+                                Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="CloseBorder"
+                                        Property="Background"
+                                        Value="#D94B5F"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed"
+                                     Value="True">
+                                <Setter TargetName="CloseBorder"
+                                        Property="Background"
+                                        Value="#A92D3E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InputTextBox"
+               TargetType="TextBox">
+            <Setter Property="Height"
+                    Value="38"/>
+            <Setter Property="Padding"
+                    Value="11,7"/>
+            <Setter Property="Margin"
+                    Value="0,5"/>
+            <Setter Property="Background"
+                    Value="{DynamicResource InputBrush}"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush"
+                    Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="CaretBrush"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+            <Setter Property="SelectionBrush"
+                    Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="InputBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="11">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="11,0"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="AcceptsReturn"
+                                     Value="True">
+                                <Setter TargetName="PART_ContentHost"
+                                        Property="Margin"
+                                        Value="11,7"/>
+                                <Setter TargetName="PART_ContentHost"
+                                        Property="VerticalAlignment"
+                                        Value="Stretch"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused"
+                                     Value="True">
+                                <Setter TargetName="InputBorder"
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="InputBorder"
+                                        Property="Background"
+                                        Value="{DynamicResource InputFocusBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="InputBorder"
+                                        Property="BorderBrush"
+                                        Value="#52617B"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter TargetName="InputBorder"
+                                        Property="Opacity"
+                                        Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InputComboBox"
+               TargetType="ComboBox">
+            <Setter Property="Height"
+                    Value="38"/>
+            <Setter Property="Padding"
+                    Value="8,5"/>
+            <Setter Property="Margin"
+                    Value="0,5"/>
+            <Setter Property="Background"
+                    Value="{DynamicResource InputBrush}"/>
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush"
+                    Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border x:Name="ComboBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="11"/>
+                            <ContentPresenter Margin="12,0,38,0"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+                            <Path Width="9"
+                                  Height="5"
+                                  Margin="0,0,14,0"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"
+                                  Fill="{DynamicResource MutedTextBrush}"
+                                  Data="M 0 0 L 4.5 5 L 9 0 Z"/>
+                            <ToggleButton Background="Transparent"
+                                          BorderThickness="0"
+                                          Focusable="False"
+                                          OverridesDefaultStyle="True"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent"/>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   PopupAnimation="Fade">
+                                <Border Margin="0,5,0,0"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="280"
+                                        Padding="5"
+                                        Background="{DynamicResource PanelBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="11">
+                                    <ScrollViewer>
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ComboBorder"
+                                        Property="BorderBrush"
+                                        Value="#52617B"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin"
+                                     Value="True">
+                                <Setter TargetName="ComboBorder"
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="Padding"
+                    Value="10,8"/>
+            <Setter Property="Margin"
+                    Value="2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="Transparent"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted"
+                                     Value="True">
+                                <Setter TargetName="ItemBorder"
+                                        Property="Background"
+                                        Value="#2B416F"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected"
+                                     Value="True">
+                                <Setter TargetName="ItemBorder"
+                                        Property="Background"
+                                        Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PanelBorder"
+               TargetType="Border">
+            <Setter Property="Background"
+                    Value="{DynamicResource PanelBrush}"/>
+            <Setter Property="BorderBrush"
+                    Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+            <Setter Property="CornerRadius"
+                    Value="18"/>
+            <Setter Property="Padding"
+                    Value="18"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground"
+                    Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Margin"
+                    Value="0,7"/>
+            <Setter Property="FontSize"
+                    Value="14"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="SwitchTrack"
+                                    Width="38"
+                                    Height="22"
+                                    CornerRadius="11"
+                                    Background="#3B404C"
+                                    BorderBrush="#505764"
+                                    BorderThickness="1">
+                                <Ellipse x:Name="SwitchThumb"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="2"
+                                         HorizontalAlignment="Left"
+                                         Fill="#D8DCE5"/>
+                            </Border>
+                            <ContentPresenter Margin="10,0,0,0"
+                                              VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked"
+                                     Value="True">
+                                <Setter TargetName="SwitchTrack"
+                                        Property="Background"
+                                        Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="SwitchTrack"
+                                        Property="BorderBrush"
+                                        Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="SwitchThumb"
+                                        Property="HorizontalAlignment"
+                                        Value="Right"/>
+                                <Setter TargetName="SwitchThumb"
+                                        Property="Fill"
+                                        Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="SwitchTrack"
+                                        Property="Opacity"
+                                        Value="0.86"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter Property="Opacity"
+                                        Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Foreground"
+                    Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="Padding"
+                    Value="10,9"/>
+            <Setter Property="Margin"
+                    Value="2"/>
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ListItemBorder"
+                                Padding="{TemplateBinding Padding}"
+                                CornerRadius="10"
+                                Background="Transparent">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="ListItemBorder"
+                                        Property="Background"
+                                        Value="#26324A"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected"
+                                     Value="True">
+                                <Setter TargetName="ListItemBorder"
+                                        Property="Background"
+                                        Value="#2B416F"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border x:Name="WindowFrame"
+            Background="{DynamicResource WindowBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SidebarBrush}"
+                    CornerRadius="20,20,0,0"
+                    MouseDown="TopBar_MouseDown">
+                <Grid>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="18,0"
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False">
+                        <TextBlock Text="⚡"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   FontSize="20"
+                                   Margin="0,0,8,0"/>
+                        <TextBlock Text="Smart Launcher"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <StackPanel HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button Content="&#xE921;"
+                                ToolTip="Свернуть"
+                                Style="{StaticResource WindowButton}"
+                                Click="MinimizeButton_Click"/>
+                        <Button x:Name="MaximizeButton"
+                                Content="&#xE922;"
+                                ToolTip="Развернуть"
+                                Style="{StaticResource WindowButton}"
+                                Click="MaximizeButton_Click"/>
+                        <Button Content="&#xE8BB;"
+                                ToolTip="Закрыть"
+                                Style="{StaticResource CloseWindowButton}"
+                                Margin="2,0,8,0"
+                                Click="CloseButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="SidebarColumn"
+                                      Width="230"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        Background="{DynamicResource SidebarBrush}"
+                        CornerRadius="0,0,0,20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="130"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="70"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <Image Source="/Assets/Icons/SL.png"
+                                   Width="65"
+                                   Height="65"/>
+                            <TextBlock x:Name="SidebarTitle"
+                                       Text="Smart Launcher"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       Margin="0,7,0,0"/>
+                            <TextBlock x:Name="SidebarVersionText"
+                                       Text="1.0 · Самая первая версия"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,3,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1">
+                            <Button x:Name="HomeNavButton"
+                                    Style="{StaticResource NavButton}"
+                                    ToolTip="Главная"
+                                    AutomationProperties.Name="Главная"
+                                    Click="HomeNavButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="30"
+                                            Height="30"
+                                            CornerRadius="9"
+                                            ClipToBounds="True">
+                                        <Image Source="/Assets/Icons/Dashboard.png"
+                                               Style="{StaticResource NavIconImage}"/>
+                                    </Border>
+                                    <TextBlock x:Name="HomeNavText"
+                                               Text="Главная"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="ModesNavButton"
+                                    Style="{StaticResource NavButton}"
+                                    ToolTip="Режимы"
+                                    AutomationProperties.Name="Режимы"
+                                    Click="ModesNavButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="30"
+                                            Height="30"
+                                            CornerRadius="9"
+                                            ClipToBounds="True">
+                                        <Image Source="/Assets/Icons/Modes.png"
+                                               Style="{StaticResource NavIconImage}"/>
+                                    </Border>
+                                    <TextBlock x:Name="ModesNavText"
+                                               Text="Режимы"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="CatalogNavButton"
+                                    Style="{StaticResource NavButton}"
+                                    ToolTip="Приложения"
+                                    AutomationProperties.Name="Приложения"
+                                    Click="CatalogNavButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="30"
+                                            Height="30"
+                                            CornerRadius="9"
+                                            ClipToBounds="True">
+                                        <Image Source="/Assets/Icons/Apps.png"
+                                               Style="{StaticResource NavIconImage}"/>
+                                    </Border>
+                                    <TextBlock x:Name="CatalogNavText"
+                                               Text="Приложения"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="SettingsNavButton"
+                                    Style="{StaticResource NavButton}"
+                                    ToolTip="Настройки"
+                                    AutomationProperties.Name="Настройки"
+                                    Click="SettingsNavButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="30"
+                                            Height="30"
+                                            CornerRadius="9"
+                                            ClipToBounds="True">
+                                        <Image Source="/Assets/Icons/Settings.png"
+                                               Style="{StaticResource NavIconImage}"/>
+                                    </Border>
+                                    <TextBlock x:Name="SettingsNavText"
+                                               Text="Настройки"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <Button x:Name="SidebarToggleButton"
+                                Grid.Row="2"
+                                Content="‹    Свернуть"
+                                ToolTip="Свернуть боковую панель"
+                                Style="{StaticResource NavButton}"
+                                HorizontalContentAlignment="Center"
+                                FontWeight="SemiBold"
+                                Click="CollapseSidebarButton_Click"/>
+                    </Grid>
+                </Border>
+
+                <Grid x:Name="PageHost"
+                      Grid.Column="1"
+                      ClipToBounds="True">
+
+                    <Ellipse Width="430"
+                             Height="430"
+                             Margin="-230,-260,0,0"
+                             HorizontalAlignment="Left"
+                             VerticalAlignment="Top"
+                             Fill="#2F6DF4"
+                             Opacity="0.055"
+                             IsHitTestVisible="False">
+                        <Ellipse.Effect>
+                            <BlurEffect Radius="80"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
+
+                    <Ellipse Width="360"
+                             Height="360"
+                             Margin="0,0,-230,-240"
+                             HorizontalAlignment="Right"
+                             VerticalAlignment="Bottom"
+                             Fill="#765BFF"
+                             Opacity="0.045"
+                             IsHitTestVisible="False">
+                        <Ellipse.Effect>
+                            <BlurEffect Radius="70"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
+
+                    <Grid x:Name="HomePage"
+                          Margin="30,25">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock x:Name="GreetingText"
+                                           Text="Добро пожаловать"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           FontSize="34"
+                                           FontWeight="Bold"/>
+                                <TextBlock Text="Выберите режим или создайте новый"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           FontSize="16"
+                                           Margin="0,7,0,20"/>
+                            </StackPanel>
+
+                            <StackPanel HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Orientation="Horizontal">
+                                <Border Padding="13,8"
+                                        Margin="0,0,8,0"
+                                        CornerRadius="12"
+                                        Background="{DynamicResource PanelBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="◇"
+                                                   Foreground="#739EFF"
+                                                   FontSize="17"
+                                                   Margin="0,0,7,0"/>
+                                        <TextBlock x:Name="ModeCountText"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Padding="13,8"
+                                        CornerRadius="12"
+                                        Background="{DynamicResource PanelBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="●"
+                                                   Foreground="#62D49A"
+                                                   FontSize="11"
+                                                   Margin="0,0,7,0"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="FoundAppsCountText"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="1"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <WrapPanel x:Name="ModesPanel"
+                                       HorizontalAlignment="Center"/>
+                        </ScrollViewer>
+
+                        <Grid Grid.Row="2"
+                              Margin="0,12,0,0">
+                            <TextBlock x:Name="OperationStatusText"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       VerticalAlignment="Center"
+                                       Text="Готово"/>
+                            <Button Content="+  Новый режим"
+                                    Style="{StaticResource ActionButton}"
+                                    HorizontalAlignment="Right"
+                                    Click="NewModeButton_Click"/>
+                        </Grid>
+                    </Grid>
+
+                    <Grid x:Name="ModesPage"
+                          Visibility="Collapsed"
+                          Margin="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Style="{StaticResource PanelBorder}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Режимы"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           FontSize="23"
+                                           FontWeight="Bold"
+                                           Margin="4,0,0,12"/>
+                                <ListBox x:Name="ModesList"
+                                         Grid.Row="1"
+                                         ItemsSource="{Binding Modes}"
+                                         Background="Transparent"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"
+                                         BorderThickness="0"
+                                         DisplayMemberPath="Name"
+                                         SelectionChanged="ModesList_SelectionChanged"/>
+                                <Button Grid.Row="2"
+                                        Content="+  Создать"
+                                        Style="{StaticResource ActionButton}"
+                                        Click="NewModeButton_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <ScrollViewer Grid.Column="2"
+                                      VerticalScrollBarVisibility="Auto">
+                            <Border Style="{StaticResource PanelBorder}">
+                                <StackPanel>
+                                    <TextBlock x:Name="EditorTitle"
+                                               Text="Редактор режима"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               FontSize="24"
+                                               FontWeight="Bold"/>
+                                    <TextBlock Text="Название"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,17,0,0"/>
+                                    <TextBox x:Name="ModeNameBox"
+                                             Style="{StaticResource InputTextBox}"
+                                             Text="{Binding ModeEditor.Name, UpdateSourceTrigger=PropertyChanged}"
+                                             TextChanged="ModePreviewField_Changed"/>
+
+                                    <TextBlock Text="Описание"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,8,0,0"/>
+                                    <TextBox x:Name="ModeDescriptionBox"
+                                             Height="62"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             Style="{StaticResource InputTextBox}"
+                                             Text="{Binding ModeEditor.Description, UpdateSourceTrigger=PropertyChanged}"
+                                             TextChanged="ModePreviewField_Changed"/>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="110"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Иконка"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                            <ComboBox x:Name="ModeIconCombo"
+                                                      Style="{StaticResource InputComboBox}"
+                                                      ItemsSource="{Binding ModeEditor.IconOptions}"
+                                                      SelectedItem="{Binding ModeEditor.SelectedIcon, Mode=TwoWay}"
+                                                      SelectionChanged="ModeIconCombo_SelectionChanged">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="2">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="30"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Width="26"
+                                                                    Height="26"
+                                                                    CornerRadius="7"
+                                                                    Background="{DynamicResource InputBrush}">
+                                                                <Image Source="{Binding Path}"
+                                                                       Margin="3"
+                                                                       Stretch="Uniform"/>
+                                                            </Border>
+                                                            <StackPanel Grid.Column="1"
+                                                                        Margin="9,0,0,0">
+                                                                <TextBlock Text="{Binding Name}"
+                                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                                <TextBlock Text="{Binding SourceText}"
+                                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                                           FontSize="10"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Content="Выбрать"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Margin="8,24,0,5"
+                                                Click="ChooseModeIconButton_Click"/>
+                                    </Grid>
+
+                                    <TextBlock Text="Цвет карточки (#RRGGBB)"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,8,0,0"/>
+                                    <TextBox x:Name="ModeAccentBox"
+                                             Style="{StaticResource InputTextBox}"
+                                             Text="{Binding ModeEditor.AccentColor, UpdateSourceTrigger=PropertyChanged}"
+                                             TextChanged="ModePreviewField_Changed"/>
+
+                                    <Border x:Name="ModePreviewBorder"
+                                            Margin="0,12,0,0"
+                                            Padding="15"
+                                            CornerRadius="15"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource BorderBrush}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="42"
+                                                    Height="42"
+                                                    CornerRadius="12"
+                                                    Background="#35FFFFFF">
+                                                <Image x:Name="ModePreviewIcon"
+                                                       Margin="7"
+                                                       Stretch="Uniform"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1"
+                                                        Margin="11,0"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock x:Name="ModePreviewName"
+                                                           Text="Новый режим"
+                                                           Foreground="White"
+                                                           FontWeight="Bold"
+                                                           FontSize="16"/>
+                                                <TextBlock x:Name="ModePreviewDescription"
+                                                           Text="Предварительный просмотр карточки"
+                                                           Foreground="#DDE6FF"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="2"
+                                                    Padding="9,5"
+                                                    CornerRadius="9"
+                                                    Background="#35FFFFFF"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="Предпросмотр"
+                                                           Foreground="White"
+                                                           FontSize="11"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Margin="0,18,0,0"
+                                            Padding="14"
+                                            CornerRadius="13"
+                                            Background="{DynamicResource InputBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Сценарий запуска"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           FontSize="18"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="Действия выполняются сверху вниз. Снимите переключатель, чтобы временно пропустить действие."
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           Margin="0,3,0,0"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <WrapPanel Grid.Row="1"
+                                                       Margin="0,9,0,0">
+                                                <Button Content="Редактировать"
+                                                        ToolTip="Изменить выбранное действие"
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Click="EditTargetButton_Click"/>
+                                                <Button Content="↑  Выше"
+                                                        ToolTip="Запустить раньше"
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Click="MoveTargetUpButton_Click"/>
+                                                <Button Content="↓  Ниже"
+                                                        ToolTip="Запустить позже"
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Click="MoveTargetDownButton_Click"/>
+                                                <Button Content="Удалить"
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Click="RemoveTargetButton_Click"/>
+                                            </WrapPanel>
+
+                                            <ListBox x:Name="TargetsList"
+                                                     Grid.Row="2"
+                                                     Height="188"
+                                                     Margin="0,12,0,0"
+                                                     Background="{DynamicResource PanelBrush}"
+                                                     BorderBrush="{DynamicResource BorderBrush}"
+                                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     MouseDoubleClick="TargetsList_MouseDoubleClick">
+                                                <ListBox.ItemContainerStyle>
+                                                    <Style TargetType="ListBoxItem">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource PrimaryTextBrush}"/>
+                                                        <Setter Property="Padding"
+                                                                Value="6,4"/>
+                                                        <Setter Property="Margin"
+                                                                Value="2"/>
+                                                        <Setter Property="MinHeight"
+                                                                Value="48"/>
+                                                        <Setter Property="HorizontalContentAlignment"
+                                                                Value="Stretch"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ListBoxItem">
+                                                                    <Border x:Name="TargetItemBorder"
+                                                                            Padding="{TemplateBinding Padding}"
+                                                                            CornerRadius="9"
+                                                                            Background="Transparent">
+                                                                        <ContentPresenter/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver"
+                                                                                 Value="True">
+                                                                            <Setter TargetName="TargetItemBorder"
+                                                                                    Property="Background"
+                                                                                    Value="#26324A"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsSelected"
+                                                                                 Value="True">
+                                                                            <Setter TargetName="TargetItemBorder"
+                                                                                    Property="Background"
+                                                                                    Value="#2B416F"/>
+                                                                            <Setter Property="Foreground"
+                                                                                    Value="White"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ListBox.ItemContainerStyle>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="6,3"
+                                                              ToolTip="{Binding ValueSummary}">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="1.2*"/>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="2*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox IsChecked="{Binding IsEnabled}"
+                                                                      Margin="0,0,10,0"
+                                                                      ToolTip="Использовать действие"
+                                                                      VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding DisplayName}"
+                                                                       FontWeight="SemiBold"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Grid.Column="2"
+                                                                       Text="{Binding TypeText}"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="3"
+                                                                       Text="{Binding ValueSummary}"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+
+                                            <TextBlock Grid.Row="3"
+                                                       Text="Подсказка: двойной щелчок по действию сразу открывает его для редактирования."
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       Margin="2,8,0,0"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Margin="0,14,0,0"
+                                            Padding="16"
+                                            CornerRadius="13"
+                                            Background="{DynamicResource PanelBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1">
+                                        <StackPanel>
+                                            <Grid>
+                                                <StackPanel>
+                                                    <TextBlock Text="Добавить действие"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               FontSize="18"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Text="Укажите, что Smart Launcher должен открыть при запуске режима."
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               Margin="0,3,0,0"/>
+                                                </StackPanel>
+                                                <Border HorizontalAlignment="Right"
+                                                        VerticalAlignment="Top"
+                                                        Padding="10,5"
+                                                        CornerRadius="10"
+                                                        Background="#26324A">
+                                                    <TextBlock x:Name="TargetEditorStatusText"
+                                                               Text="Новое действие"
+                                                               Foreground="#BFD2FF"
+                                                               FontWeight="SemiBold"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <TextBlock Text="1. Что нужно запустить?"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       FontWeight="SemiBold"
+                                                       Margin="0,15,0,8"/>
+
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Название (необязательно)"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="Тип действия"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           Margin="8,0,0,0"/>
+                                                <TextBlock x:Name="TargetValueLabel"
+                                                           Grid.Column="2"
+                                                           Text="Путь к программе"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           Margin="8,0,0,0"/>
+
+                                                <TextBox x:Name="TargetNameBox"
+                                                         Grid.Row="1"
+                                                         Style="{StaticResource InputTextBox}"
+                                                         AutomationProperties.Name="Название действия"
+                                                         ToolTip="Например: Редактор кода"
+                                                         Margin="0,4,0,0"/>
+                                                <ComboBox x:Name="TargetTypeCombo"
+                                                          Grid.Row="1"
+                                                          Grid.Column="1"
+                                                          Style="{StaticResource InputComboBox}"
+                                                          AutomationProperties.Name="Тип действия"
+                                                          Margin="8,4,0,0"
+                                                          SelectionChanged="TargetTypeCombo_SelectionChanged"/>
+                                                <Grid Grid.Row="1"
+                                                      Grid.Column="2"
+                                                      Margin="8,4,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox x:Name="TargetValueBox"
+                                                             Style="{StaticResource InputTextBox}"
+                                                             AutomationProperties.Name="Путь, адрес или команда"
+                                                             ToolTip="Путь, URL, Steam ID или команда"
+                                                             Margin="0"/>
+                                                    <ComboBox x:Name="TargetApplicationCombo"
+                                                              Visibility="Collapsed"
+                                                              Style="{StaticResource InputComboBox}"
+                                                              ItemsSource="{Binding ApplicationOptions}"
+                                                              SelectionChanged="TargetApplicationCombo_SelectionChanged"
+                                                              AutomationProperties.Name="Приложение из каталога">
+                                                        <ComboBox.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="2">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="30"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Border Width="26"
+                                                                            Height="26"
+                                                                            CornerRadius="7"
+                                                                            Background="{DynamicResource InputBrush}">
+                                                                        <Image Source="{Binding IconPath}"
+                                                                               Margin="3"
+                                                                               Stretch="Uniform"/>
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding Name}"
+                                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                               Margin="9,0"
+                                                                               VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding Category}"
+                                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                                               Margin="8,0,4,0"
+                                                                               VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                    </ComboBox>
+                                                    <Button x:Name="BrowseTargetButton"
+                                                            Grid.Column="1"
+                                                            MinWidth="94"
+                                                            Content="Обзор"
+                                                            Margin="8,0,0,0"
+                                                            Style="{StaticResource SecondaryButton}"
+                                                            Click="BrowseTargetButton_Click"/>
+                                                </Grid>
+                                            </Grid>
+
+                                            <TextBlock x:Name="TargetHelpText"
+                                                       Text="Выберите программу через «Обзор» или вставьте полный путь к EXE."
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       Margin="0,7,0,0"
+                                                       TextWrapping="Wrap"/>
+
+                                            <Border x:Name="ProjectFilesPanel"
+                                                    Visibility="Collapsed"
+                                                    Margin="0,13,0,0"
+                                                    Padding="13"
+                                                    CornerRadius="11"
+                                                    Background="{DynamicResource InputBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="2. Какие файлы проекта открыть?"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                   FontWeight="SemiBold"/>
+                                                        <TextBlock x:Name="ProjectFilesSummaryText"
+                                                                   Text="Файлы пока не выбраны"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   Margin="0,3,12,0"
+                                                                   TextWrapping="Wrap"/>
+                                                        <TextBlock Text="Можно добавлять файлы из разных подпапок несколькими выборами."
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   FontSize="11"
+                                                                   Margin="0,3,12,0"/>
+                                                    </StackPanel>
+                                                    <Grid Grid.Row="1"
+                                                          Grid.ColumnSpan="2"
+                                                          Margin="0,10,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <ComboBox x:Name="ProjectFileSetsCombo"
+                                                                  Style="{StaticResource InputComboBox}"
+                                                                  DisplayMemberPath="Name"
+                                                                  SelectionChanged="ProjectFileSetsCombo_SelectionChanged"/>
+                                                        <StackPanel Grid.Column="1"
+                                                                    Orientation="Horizontal"
+                                                                    Margin="8,0,0,0">
+                                                            <Button Content="+ Набор"
+                                                                    ToolTip="Создать ещё один набор файлов"
+                                                                    Style="{StaticResource SecondaryButton}"
+                                                                    Click="AddProjectFileSetButton_Click"/>
+                                                            <Button Content="Переименовать"
+                                                                    Style="{StaticResource SecondaryButton}"
+                                                                    Click="RenameProjectFileSetButton_Click"/>
+                                                            <Button Content="Удалить набор"
+                                                                    Style="{StaticResource SecondaryButton}"
+                                                                    Click="DeleteProjectFileSetButton_Click"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                    <StackPanel Grid.Row="2"
+                                                                Grid.ColumnSpan="2"
+                                                                Orientation="Horizontal"
+                                                                Margin="2,8,0,0">
+                                                        <CheckBox x:Name="ProjectFileSetEnabledCheck"
+                                                                  Content="Запускать выбранный набор"
+                                                                  Checked="ProjectFileSetEnabledCheck_Changed"
+                                                                  Unchecked="ProjectFileSetEnabledCheck_Changed"/>
+                                                        <CheckBox x:Name="OpenProjectFolderCheck"
+                                                                  Content="Открыть также всю папку проекта"
+                                                                  Margin="22,0,0,0"/>
+                                                    </StackPanel>
+                                                    <WrapPanel Grid.Row="3"
+                                                               Grid.ColumnSpan="2"
+                                                               Margin="0,9,0,0">
+                                                        <Button Content="+  Добавить файлы"
+                                                                Style="{StaticResource SecondaryButton}"
+                                                                Click="SelectProjectFilesButton_Click"/>
+                                                        <Button Content="Убрать выбранные"
+                                                                Style="{StaticResource SecondaryButton}"
+                                                                Click="RemoveProjectFilesButton_Click"/>
+                                                        <Button Content="Очистить"
+                                                                Style="{StaticResource SecondaryButton}"
+                                                                Click="ClearProjectFilesButton_Click"/>
+                                                    </WrapPanel>
+                                                    <ListBox x:Name="ProjectFilesList"
+                                                             Grid.Row="4"
+                                                             Grid.ColumnSpan="2"
+                                                             Margin="0,9,0,0"
+                                                             MinHeight="82"
+                                                             MaxHeight="145"
+                                                             SelectionMode="Extended"
+                                                             AllowDrop="True"
+                                                             PreviewDragOver="ProjectFilesList_PreviewDragOver"
+                                                             Drop="ProjectFilesList_Drop"
+                                                             Background="Transparent"
+                                                             BorderThickness="0"
+                                                             Foreground="{DynamicResource PrimaryTextBrush}"
+                                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Right"
+                                                        Margin="0,14,0,0">
+                                                <Button x:Name="CancelTargetEditButton"
+                                                        Content="Отменить редактирование"
+                                                        Visibility="Collapsed"
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Click="CancelTargetEditButton_Click"/>
+                                                <Button x:Name="AddTargetButton"
+                                                        Content="+  Добавить в сценарий"
+                                                        Style="{StaticResource ActionButton}"
+                                                        Click="AddTargetButton_Click"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                Margin="0,14,0,0">
+                                        <Button Content="Удалить режим"
+                                                Background="#A93646"
+                                                Style="{StaticResource ActionButton}"
+                                                Click="DeleteEditedModeButton_Click"/>
+                                        <Button Content="Сохранить режим"
+                                                Style="{StaticResource ActionButton}"
+                                                Click="SaveModeButton_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <Grid x:Name="CatalogPage"
+                          Visibility="Collapsed"
+                          Margin="28,24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="Каталог приложений"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           FontSize="30"
+                                           FontWeight="Bold"/>
+                                <TextBlock Text="Автоматически найденные программы и ручные пути"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right"
+                                        Orientation="Horizontal">
+                                <Button Content="+  Добавить приложение"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Click="AddCatalogApplicationButton_Click"/>
+                                <Button Content="Открыть apps.json"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Click="OpenCatalogButton_Click"/>
+                                <Button Content="↻  Сканировать"
+                                        Style="{StaticResource ActionButton}"
+                                        Click="RescanButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Grid.Row="1"
+                                    Margin="0,12">
+                            <ProgressBar x:Name="ScanProgress"
+                                         Height="4"
+                                         IsIndeterminate="True"
+                                         Visibility="Collapsed"/>
+                            <TextBlock x:Name="ScanStatusText"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+
+                        <Grid Grid.Row="2"
+                              Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="210"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="CatalogSearchBox"
+                                     Style="{StaticResource InputTextBox}"
+                                     Margin="0,0,10,0"
+                                     ToolTip="Поиск по названию, категории и пути"
+                                     Text="{Binding CatalogSearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox x:Name="CatalogCategoryCombo"
+                                      Grid.Column="1"
+                                      Style="{StaticResource InputComboBox}"
+                                      ToolTip="Категория приложений"
+                                      ItemsSource="{Binding CatalogCategories}"
+                                      SelectedItem="{Binding SelectedCatalogCategory, Mode=TwoWay}"/>
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="3"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="CatalogList"
+                                          ItemsSource="{Binding CatalogItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource PanelBorder}"
+                                                Margin="0,0,0,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="48"/>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="40"
+                                                        Height="40"
+                                                        CornerRadius="10"
+                                                        Background="{DynamicResource InputBrush}">
+                                                    <Image Source="{Binding IconPath}"
+                                                           Margin="6"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1"
+                                                            Margin="10,0">
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding StatusText}"
+                                                                   Foreground="{Binding StatusColor}"
+                                                                   FontSize="12"/>
+                                                        <TextBlock Text="{Binding Category, StringFormat=  •  {0}}"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   FontSize="12"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding PathText}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Margin="8,0"/>
+                                                <StackPanel Grid.Column="3"
+                                                            Orientation="Horizontal">
+                                                    <Button Content="Указать .exe"
+                                                            Style="{StaticResource SecondaryButton}"
+                                                            Tag="{Binding}"
+                                                            Click="ChoosePathButton_Click"/>
+                                                    <Button Content="Проверить"
+                                                            Style="{StaticResource SecondaryButton}"
+                                                            Tag="{Binding}"
+                                                            Click="TestAppButton_Click"/>
+                                                    <Button Content="Удалить"
+                                                            Tag="{Binding}"
+                                                            Click="DeleteCatalogApplicationButton_Click">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource SecondaryButton}">
+                                                                <Setter Property="Visibility"
+                                                                        Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsUserAdded}"
+                                                                                 Value="True">
+                                                                        <Setter Property="Visibility"
+                                                                                Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <ScrollViewer x:Name="SettingsPage"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="32,25"
+                                    MaxWidth="720"
+                                    HorizontalAlignment="Left">
+                            <TextBlock Text="Настройки"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       FontSize="30"
+                                       FontWeight="Bold"/>
+
+                            <Border Style="{StaticResource PanelBorder}"
+                                    Margin="0,20,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Внешний вид"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="Тема"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,12,0,0"/>
+                                    <ComboBox x:Name="ThemeCombo"
+                                              Style="{StaticResource InputComboBox}">
+                                        <ComboBoxItem Content="Тёмная"/>
+                                        <ComboBoxItem Content="Светлая"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Прозрачность поверхностей"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,12,0,0"/>
+                                    <DockPanel>
+                                        <TextBlock x:Name="TransparencyValueText"
+                                                   DockPanel.Dock="Right"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   Width="62"
+                                                   TextAlignment="Right"/>
+                                        <Slider x:Name="TransparencySlider"
+                                                Minimum="0.78"
+                                                Maximum="1"
+                                                TickFrequency="0.01"
+                                                ValueChanged="TransparencySlider_ValueChanged"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource PanelBorder}"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Поведение"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"/>
+                                    <CheckBox x:Name="AutoStartCheck"
+                                              Content="Запускать вместе с Windows"/>
+                                    <CheckBox x:Name="CloseToTrayCheck"
+                                              Content="Закрывать окно в системный трей"/>
+                                    <TextBlock Text="Обычное сворачивание всегда оставляет Smart Launcher на панели задач."
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="47,-4,0,8"
+                                               TextWrapping="Wrap"/>
+                                    <Grid Margin="0,5,0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Ярлык на рабочем столе"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock x:Name="DesktopShortcutStatusText"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Content="Восстановить ярлык"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="RestoreDesktopShortcutButton_Click"/>
+                                    </Grid>
+                                    <TextBlock Text="Задержка между действиями"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,10,0,0"/>
+                                    <DockPanel>
+                                        <TextBlock x:Name="DelayValueText"
+                                                   DockPanel.Dock="Right"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   Width="75"
+                                                   TextAlignment="Right"/>
+                                        <Slider x:Name="DelaySlider"
+                                                Minimum="0"
+                                                Maximum="5000"
+                                                TickFrequency="100"
+                                                ValueChanged="DelaySlider_ValueChanged"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource PanelBorder}"
+                                    Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Обновления"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"/>
+                                    <CheckBox x:Name="AutomaticUpdatesCheck"
+                                              Content="Автоматически проверять обновления"/>
+                                    <TextBlock Text="HTTPS-адрес JSON-манифеста"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,8,0,0"/>
+                                    <TextBox x:Name="UpdateManifestUrlBox"
+                                             Style="{StaticResource InputTextBox}"
+                                             ToolTip="Адрес будет задан после публикации установщика"/>
+                                    <Grid Margin="0,7,0,0">
+                                        <TextBlock x:Name="UpdateStatusText"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   VerticalAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,130,0"/>
+                                        <Button Content="Проверить сейчас"
+                                                HorizontalAlignment="Right"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="CheckUpdatesButton_Click"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource PanelBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Данные"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="DataPathText"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,8"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Импорт режимов"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="ImportModesButton_Click"/>
+                                        <Button Content="Экспорт режимов"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="ExportModesButton_Click"/>
+                                        <Button Content="Открыть журнал"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Click="OpenLogButton_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Button Content="Сохранить настройки"
+                                    Style="{StaticResource ActionButton}"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,14,0,20"
+                                    Click="SaveSettingsButton_Click"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

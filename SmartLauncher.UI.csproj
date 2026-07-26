@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+
+<PropertyGroup>
+
+    <OutputType>WinExe</OutputType>
+
+    <TargetFramework>net8.0-windows</TargetFramework>
+
+    <AssemblyName>SmartLauncher</AssemblyName>
+
+    <Product>Smart Launcher</Product>
+
+    <Title>Smart Launcher</Title>
+
+    <Description>Персональный лаунчер режимов для Windows — Самая первая версия</Description>
+
+    <Version>1.0.0</Version>
+
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <FileVersion>1.0.0.0</FileVersion>
+
+    <InformationalVersion>1.0.0-first-release</InformationalVersion>
+
+    <ApplicationIcon>Assets\Icons\SL.ico</ApplicationIcon>
+
+    <UseWPF>true</UseWPF>
+
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <Nullable>enable</Nullable>
+
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**;.artifacts\**;dist\**</DefaultItemExcludes>
+
+</PropertyGroup>
+
+
+
+<ItemGroup>
+
+    <Resource Include="Assets\Icons\SL.ico"/>
+
+    <Resource Include="Assets\Icons\SL.png"/>
+
+    <Resource Include="Assets\Icons\Dashboard.png"/>
+
+    <Resource Include="Assets\Icons\Modes.png"/>
+
+    <Resource Include="Assets\Icons\Apps.png"/>
+
+    <Resource Include="Assets\Icons\Work.png"/>
+
+    <Resource Include="Assets\Icons\Gaming.png"/>
+
+    <Resource Include="Assets\Icons\Relax.png"/>
+
+    <Resource Include="Assets\Icons\Settings.png"/>
+
+</ItemGroup>
+
+<Target Name="CopySingleFileExecutable"
+        AfterTargets="Publish"
+        Condition="'$(PublishSingleFile)' == 'true'">
+    <PropertyGroup>
+        <FinalExecutableDirectory>$(MSBuildProjectDirectory)\dist\portable-$(RuntimeIdentifier)\</FinalExecutableDirectory>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(FinalExecutableDirectory)"/>
+
+    <Copy SourceFiles="$(PublishDir)$(AssemblyName).exe"
+          DestinationFolder="$(FinalExecutableDirectory)"
+          SkipUnchangedFiles="true"/>
+</Target>
+
+</Project>

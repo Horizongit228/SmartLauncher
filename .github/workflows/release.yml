@@ -1,0 +1,72 @@
+name: Build and publish Smart Launcher
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Read and verify version
+        id: metadata
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content -LiteralPath SmartLauncher.UI.csproj
+          $version = [string]($project.Project.PropertyGroup.Version | Select-Object -First 1)
+          $expectedTag = "v$version"
+          if ("${{ github.ref_name }}" -ne $expectedTag) {
+            throw "Tag ${{ github.ref_name }} does not match project version $version."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: ./installer/build-installer.ps1
+
+      - name: Build portable
+        shell: pwsh
+        run: ./installer/build-portable.ps1
+
+      - name: Create update manifest
+        shell: pwsh
+        run: |
+          $version = "${{ steps.metadata.outputs.version }}"
+          $assetUrl = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/SmartLauncher-Setup-$version.exe"
+          ./installer/New-UpdateManifest.ps1 `
+            -InstallerUrl $assetUrl `
+            -Version $version `
+            -ReleaseNotes "Smart Launcher 1.0 — Самая первая версия"
+          Copy-Item `
+            -LiteralPath "dist/portable-win-x64/SmartLauncher.exe" `
+            -Destination "dist/installer/SmartLauncher-portable-$version.exe"
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = "${{ steps.metadata.outputs.version }}"
+          gh release create "${{ github.ref_name }}" `
+            "dist/installer/SmartLauncher-Setup-$version.exe" `
+            "dist/installer/SmartLauncher-portable-$version.exe" `
+            "dist/installer/update-manifest.json" `
+            --title "Smart Launcher 1.0 — Самая первая версия" `
+            --notes-file CHANGELOG.md
